@@ -89,6 +89,10 @@ about fixing.
 7. Configure a scheduler to call `GET /api/cron/poll-inbound` with `Authorization: Bearer $CRON_SECRET`.
    The manual sync control remains available as a recovery/diagnostic action.
 
+For Vercel, `vercel.json` schedules this route every five minutes. Set `CRON_SECRET` in the Vercel
+project; Vercel includes it as the bearer token on cron invocations. Cron frequency depends on the
+selected Vercel plan, so use an external scheduler with the same authorization header if necessary.
+
 ## Tests
 
 `npm test` runs the pure-logic suite (judgment engine, aggregation, orchestration with mocked stores)
