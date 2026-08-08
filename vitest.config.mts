@@ -1,4 +1,4 @@
-+import { defineConfig } from "vitest/config";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
@@ -12,4 +12,3 @@ export default defineConfig({
     alias: { "server-only": new URL("./test/server-only.ts", import.meta.url).pathname },
   },
 });
-
