@@ -1,339 +1,80 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getUser } from "@/lib/auth/dal";
-import {
-  ArrowRight,
-  ShieldCheck,
-  Sliders,
-  ArrowRightLeft,
-  FileText,
-  Lock,
-  Database,
-  ExternalLink,
-  BookOpen,
-  Download,
-} from "lucide-react";
+import { ArrowDown, ArrowRight, CheckCircle2, CirclePause, FileCheck2, Landmark, Radar, ShieldCheck, WalletCards } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
   const user = await getUser();
-  const primaryHref = user ? "/app" : "/signup";
-  const primaryLabel = user ? "Go to your merchants" : "Create an account";
-
-  return (
-    <div className="flex min-h-screen flex-col bg-[#080B09] text-zinc-100 font-sans antialiased selection:bg-[#84A93C] selection:text-zinc-950">
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 opacity-20">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[450px] rounded-full bg-[#84A93C]/10 blur-[150px]" />
+  const appHref = user ? "/app" : "/signup";
+  return <div className="min-h-screen bg-[#070a08] text-white selection:bg-lime-300 selection:text-black">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#070a08]/90 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
+        <Link href="/"><Image src="/assay-logo.svg" alt="Assay" width={148} height={36} priority className="h-9 w-auto" /></Link>
+        <nav className="hidden items-center gap-8 text-sm font-semibold text-zinc-300 md:flex"><a href="#problem" className="hover:text-white">The problem</a><a href="#workflow" className="hover:text-white">How it works</a><a href="#proof" className="hover:text-white">What you get</a><Link href="/docs" className="hover:text-white">Guide</Link></nav>
+        <div className="flex items-center gap-4">{!user && <Link href="/login" className="text-sm font-semibold text-zinc-300 hover:text-white">Sign in</Link>}<Link href={appHref} className="rounded-full bg-[#a8d14a] px-5 py-2.5 text-sm font-extrabold text-[#10150b] hover:bg-[#b8e05a]">{user ? "Open workspace" : "Start free sandbox"}</Link></div>
       </div>
+    </header>
 
-      <header className="relative z-50 w-full border-b border-zinc-800/60 bg-[#080B09]/80 backdrop-blur-xl sticky top-0">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-8">
-            <Link href="/">
-              <Image src="/assay-logo.svg" alt="Assay" width={160} height={38} priority className="h-9 w-auto" />
-            </Link>
-            <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-zinc-400">
-              <a href="#architecture" className="hover:text-zinc-100 transition-colors">
-                Architecture
-              </a>
-              <a href="#how-it-works" className="hover:text-zinc-100 transition-colors">
-                Workflow
-              </a>
-              <a href="#features" className="hover:text-zinc-100 transition-colors">
-                Capabilities
-              </a>
-              <Link href="/docs" className="hover:text-zinc-100 transition-colors flex items-center gap-1">
-                Docs <ExternalLink className="h-3 w-3" />
-              </Link>
-            </nav>
+    <main>
+      <section className="relative overflow-hidden border-b border-white/10">
+        <div className="absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(168,209,74,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(168,209,74,.08)_1px,transparent_1px)] [background-size:64px_64px]" />
+        <div className="relative mx-auto grid max-w-7xl gap-14 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-[1.05fr_.95fr] lg:items-center">
+          <div>
+            <p className="mb-6 text-sm font-extrabold uppercase tracking-[.22em] text-[#a8d14a]">Autonomous merchant treasury control</p>
+            <h1 className="max-w-4xl text-5xl font-black leading-[1.02] tracking-[-.045em] text-white sm:text-6xl lg:text-7xl">Clean money can still be the wrong money to move.</h1>
+            <p className="mt-7 max-w-2xl text-lg leading-8 text-zinc-300 sm:text-xl">Cleanverse proves a payment is compliant. <strong className="text-white">Assay decides whether your business should clear it, hold it, or pay it out now</strong>—using your cash position, normal behavior, and counterparty history.</p>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row"><Link href={appHref} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#a8d14a] px-7 py-4 text-base font-extrabold text-[#10150b] hover:bg-[#b8e05a]">{user ? "Open your workspace" : "Create a sandbox workspace"}<ArrowRight className="h-5 w-5" /></Link><Link href="/docs#getting-started" className="inline-flex items-center justify-center rounded-xl border border-white/20 px-7 py-4 text-base font-bold text-white hover:bg-white/5">See the 5-minute setup</Link></div>
+            <p className="mt-4 text-sm text-zinc-400">Real Cleanverse checks · Real Monad testnet transfers · No card or payment required</p>
           </div>
 
-          <div className="flex items-center gap-3">
-            {!user && (
-              <Link href="/login" className="text-xs font-semibold text-zinc-400 hover:text-zinc-100">
-                Sign in
-              </Link>
-            )}
-            <Link
-              href={primaryHref}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#84A93C] px-4.5 py-2 text-xs font-bold text-zinc-950 transition-all hover:bg-[#96bc46] shadow-md shadow-[#84A93C]/10 active:scale-95"
-            >
-              {primaryLabel}
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+          <div className="relative rounded-[2rem] border border-white/15 bg-[#101411] p-5 shadow-2xl shadow-black/50 sm:p-7">
+            <div className="flex items-center justify-between border-b border-white/10 pb-5"><div><p className="text-sm font-bold text-white">Incoming payment</p><p className="mt-1 text-sm text-zinc-400">New customer · 0x71…48A2</p></div><span className="text-3xl font-black text-white">4,000 <small className="text-base text-zinc-400">aUSDC</small></span></div>
+            <div className="space-y-5 py-6">
+              <Signal icon={<ShieldCheck />} label="Cleanverse compliance" value="Verified and permitted" tone="text-emerald-300" />
+              <Signal icon={<Radar />} label="Behavior check" value="40× normal amount · first-time sender" tone="text-amber-300" />
+              <Signal icon={<Landmark />} label="Cash position" value="Within current reserve policy" tone="text-zinc-200" />
+            </div>
+            <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-5"><div className="flex items-center justify-between"><span className="text-sm font-extrabold uppercase tracking-wider text-amber-300">Assay decision</span><span className="rounded-full bg-amber-300 px-3 py-1 text-xs font-black text-black">REVIEW</span></div><p className="mt-3 text-base leading-7 text-white">The payment is compliant, but unusually large and from a new counterparty. Keep it quarantined until your team confirms it.</p></div>
           </div>
         </div>
-      </header>
+      </section>
 
-      <main className="relative z-10 flex flex-1 flex-col">
-        <section className="mx-auto flex w-full max-w-5xl flex-col items-center gap-8 px-6 pt-16 pb-12 text-center">
-          <div className="flex flex-col items-center gap-6">
-            <h1 className="max-w-4xl text-3xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl text-zinc-50 leading-[1.12]">
-              Cleanverse answers &lsquo;is it allowed?&rsquo;. <br />
-              <span className="bg-gradient-to-r from-[#84A93C] via-[#A0C450] to-[#84A93C] bg-clip-text text-transparent">
-                Assay answers &lsquo;should it move now?&rsquo;.
-              </span>
-            </h1>
+      <section id="problem" className="border-b border-white/10 bg-[#eef3e8] text-[#11170e]">
+        <div className="mx-auto grid max-w-7xl gap-12 px-5 py-20 sm:px-8 lg:grid-cols-[.8fr_1.2fr] lg:py-28">
+          <div><p className="text-sm font-black uppercase tracking-[.2em] text-[#57752b]">The operational gap</p><h2 className="mt-4 text-4xl font-black leading-tight tracking-tight sm:text-5xl">Compliance tells you what may happen. It does not run your treasury.</h2></div>
+          <div className="space-y-8 text-lg leading-8 text-[#394134]"><p>A verified customer can still send an amount wildly outside your normal business pattern. A verified supplier can still be paid at the wrong time and push your reserves below policy. A compliant transfer can still require human review.</p><p className="font-bold text-[#11170e]">Without Assay, a finance operator must watch wallets, compare transactions manually, decide what clears, and reconstruct the reasoning later for auditors.</p><div className="border-l-4 border-[#7ca532] pl-6 text-2xl font-black leading-9">Assay turns those repeated treasury decisions into a controlled, explainable operating loop.</div></div>
+        </div>
+      </section>
 
-            <p className="max-w-2xl text-sm sm:text-base text-zinc-400 leading-relaxed">
-              An autonomous treasury operator for on-chain merchants, running on Cleanverse&apos;s verified rails on
-              Monad. Cleanverse gates compliance (A-Pass/CCP); Assay decides operational timing, solvency
-              sequencing, and anomaly escalation — and settles for real, on-chain.
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center gap-4 pt-2">
-            <Link
-              href={primaryHref}
-              className="inline-flex items-center justify-center gap-2.5 rounded-xl bg-[#84A93C] px-8 py-3.5 text-sm font-bold text-zinc-950 transition-all hover:bg-[#96bc46] hover:shadow-xl hover:shadow-[#84A93C]/20 active:scale-95"
-            >
-              {primaryLabel}
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/docs"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 px-6 py-3.5 text-sm font-semibold text-zinc-300 hover:bg-zinc-800/80 transition-colors"
-            >
-              <BookOpen className="h-4 w-4 text-zinc-400" />
-              Read Technical Docs
-            </Link>
-          </div>
-
-          <div className="w-full max-w-4xl pt-8">
-            <div className="overflow-hidden rounded-2xl border border-zinc-800/80 bg-zinc-900/70 p-6 text-left shadow-2xl backdrop-blur-xl">
-              <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4 mb-4">
-                <span className="font-mono text-xs font-semibold text-zinc-400">Example judgment-engine output</span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
-                <div className="rounded-xl border border-zinc-800/60 bg-zinc-950/80 p-4 flex flex-col gap-2">
-                  <span className="text-zinc-500 font-sans font-medium text-[11px] uppercase tracking-wider">
-                    Inbound Payment Detected On-Chain
-                  </span>
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-zinc-200 font-bold">$4,000.00 A-Token</span>
-                    <span className="text-zinc-400">Payer: 0x3C44...93BC</span>
-                  </div>
-                  <div className="pt-2 text-[11px] font-sans text-emerald-400 flex items-center gap-1.5 border-t border-zinc-800/50">
-                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-                    Cleanverse Compliance: Code 4 (A-Pass Verified)
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-amber-900/40 bg-amber-950/20 p-4 flex flex-col gap-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-amber-400 font-sans font-semibold text-[11px] uppercase tracking-wider">
-                      Assay Operational Verdict
-                    </span>
-                    <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-400 border border-amber-500/30">
-                      ESCALATE
-                    </span>
-                  </div>
-                  <p className="text-zinc-300 font-sans text-[11px] leading-relaxed">
-                    4.0σ size deviation vs learned baseline ($100 avg), AND counterparty first seen today. Exceeds
-                    risk tolerance → Escalated to Merchant Inbox.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="architecture" className="w-full border-t border-zinc-800/60 bg-zinc-950/60 py-16">
-          <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold tracking-tight text-zinc-100 sm:text-3xl">The Two Architectural Layers</h2>
-              <p className="text-xs text-zinc-400 pt-1">
-                Compliance says a transfer is permitted. Assay decides whether it is timely, safe, and wise.
-              </p>
-            </div>
-
-            <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 text-left">
-              <div className="flex flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 backdrop-blur-md">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="h-5 w-5 text-zinc-400" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Cleanverse Rail</span>
-                </div>
-                <h3 className="text-2xl font-bold text-zinc-100">&ldquo;Is it allowed?&rdquo;</h3>
-                <p className="text-xs text-zinc-400 leading-relaxed">
-                  Static compliance pre-flight checks. Enforces A-Pass bank-verified identity credentials, A-Token
-                  provenance, Travel Rule data capture, and sanctions restrictions.
-                </p>
-                <div className="mt-auto pt-4 border-t border-zinc-800/60 text-[11px] font-semibold text-zinc-500 flex items-center gap-1.5">
-                  <Lock className="h-3.5 w-3.5 text-zinc-500" /> Base Protocol Gate (Native)
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-4 rounded-2xl border border-zinc-700/80 bg-zinc-900/90 p-6 backdrop-blur-md shadow-xl">
-                <div className="flex items-center gap-2">
-                  <Image src="/assay-icon.svg" alt="A-Chip" width={22} height={22} className="rounded-md" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#84A93C]">Assay Operator</span>
-                </div>
-                <h3 className="text-2xl font-bold text-zinc-100">&ldquo;Should it move now?&rdquo;</h3>
-                <p className="text-xs text-zinc-300 leading-relaxed">
-                  Autonomous cashflow timing &amp; risk judgment. Evaluates amount anomaly z-score, counterparty
-                  history, and solvency reserve rules to ALLOW, HOLD, ESCALATE, or BLOCK — the decision itself is
-                  deterministic and auditable; a real LLM call narrates it in plain language.
-                </p>
-                <div className="mt-auto pt-4 border-t border-zinc-800/60 text-[11px] font-semibold text-[#84A93C] flex items-center gap-1.5">
-                  <Sliders className="h-3.5 w-3.5 text-[#84A93C]" /> Operational Treasury Decision Layer
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="how-it-works" className="w-full border-t border-zinc-800/60 py-20">
-          <div className="mx-auto flex w-full max-w-5xl flex-col gap-12 px-6">
-            <div className="flex flex-col items-center gap-2 text-center">
-              <h2 className="text-2xl font-bold tracking-tight text-zinc-100 sm:text-3xl">How It Works</h2>
-              <p className="text-xs text-zinc-400">Three steps, running for real on Monad testnet.</p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-              <div className="flex flex-col gap-4 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-6">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-950 text-zinc-200">
-                  <ArrowRightLeft className="h-5 w-5" />
-                </div>
-                <span className="text-xs font-bold text-zinc-500">01 / DETECTION</span>
-                <h3 className="text-base font-bold text-zinc-100">Assay watches the chain</h3>
-                <p className="text-xs text-zinc-400 leading-relaxed">
-                  Inbound A-Token transfers to the merchant&apos;s wallet are detected from real on-chain events, not
-                  simulated. Outbound payouts are merchant-initiated.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-4 rounded-2xl border border-zinc-800/80 bg-zinc-900/50 p-6">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-950 text-zinc-200">
-                  <ShieldCheck className="h-5 w-5" />
-                </div>
-                <span className="text-xs font-bold text-zinc-500">02 / COMPLIANCE</span>
-                <h3 className="text-base font-bold text-zinc-100">Cleanverse Compliance Gate</h3>
-                <p className="text-xs text-zinc-400 leading-relaxed">
-                  A-Pass credential status and CCP rules verify identity, sanctions, and Travel Rule safety. A
-                  compliance block is final — Assay never overrides it.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-4 rounded-2xl border border-zinc-700/80 bg-zinc-900/80 p-6 shadow-md">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-[#84A93C]/40 bg-[#090C0A] text-[#84A93C]">
-                  <Sliders className="h-5 w-5" />
-                </div>
-                <span className="text-xs font-bold text-[#84A93C]">03 / DECISION</span>
-                <h3 className="text-base font-bold text-zinc-100">Assay&apos;s operational verdict</h3>
-                <p className="text-xs text-zinc-400 leading-relaxed">
-                  Multi-signal engine judges timing, solvency, and anomaly score to ALLOW, HOLD, ESCALATE, or BLOCK,
-                  with merchant override on escalations.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="features" className="w-full border-t border-zinc-800/60 bg-zinc-950/40 py-20">
-          <div className="mx-auto flex w-full max-w-5xl flex-col gap-12 px-6">
-            <div className="flex flex-col items-center gap-2 text-center">
-              <h2 className="text-2xl font-bold tracking-tight text-zinc-100 sm:text-3xl">Product Capabilities</h2>
-              <p className="text-xs text-zinc-400 max-w-xl">
-                Built for merchants and financial institutions running compliant on-chain cashflow operations.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              <Capability
-                icon={<Sliders className="h-5 w-5 text-[#84A93C]" />}
-                title="Solvency Reserve Protection"
-                body="Automatically holds outbound payouts if committed spending would breach cleared inflow reserves, preventing liquidity deficits."
-              />
-              <Capability
-                icon={<Database className="h-5 w-5 text-[#84A93C]" />}
-                title="Learned Baseline Intelligence"
-                body="Calculates real-time z-score deviation over historical merchant transaction amounts and tracks known counterparty history, per merchant."
-              />
-              <Capability
-                icon={<ShieldCheck className="h-5 w-5 text-[#84A93C]" />}
-                title="Decision Inbox & Escalation"
-                body="Anomalous payments (large amount + first-seen counterparty) are surfaced with a real LLM-narrated rationale for merchant sign-off."
-              />
-              <Capability
-                icon={<Lock className="h-5 w-5 text-[#84A93C]" />}
-                title="Fail-Closed by Design"
-                body="Any transaction failing either Cleanverse compliance OR Assay's own operating policy is held or blocked cleanly — funds never move partially."
-              />
-              <Capability
-                icon={<Download className="h-5 w-5 text-[#84A93C]" />}
-                title="Dual Audit Log Exporter"
-                body="One-click exportable JSON and CSV audit packages merging Cleanverse CCP proofs with Assay's operational decision rationale."
-              />
-              <Capability
-                icon={<FileText className="h-5 w-5 text-[#84A93C]" />}
-                title="Per-Merchant Accounts"
-                body="Every merchant is its own tenant with a managed sandbox wallet, operating policy, learned baseline, and private decision log. Assay owns the Cleanverse infrastructure configuration."
-              />
-            </div>
-          </div>
-        </section>
-
-        <section className="w-full border-t border-zinc-800/60 bg-zinc-950/60 py-16">
-          <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-6 text-center">
-            <h2 className="text-xl font-bold text-zinc-100">On custody</h2>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              Assay is not a custodian in the exchange sense — it never takes ownership of merchant funds or trades
-              on their behalf. But it is not custody-free either: to act autonomously, each merchant gives Assay a
-              signing key, encrypted at rest, scoped to that merchant only, and usable only to submit transfers
-              through Cleanverse&apos;s verified rails. That mandate is the mechanism that makes &ldquo;autonomous&rdquo;
-              possible — it is disclosed here, not hidden behind marketing language.
-            </p>
-          </div>
-        </section>
-      </main>
-
-      <footer className="w-full border-t border-zinc-800/80 bg-[#080B09] py-14">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-zinc-800/60 pb-8">
-            <div className="flex flex-col gap-2">
-              <Image src="/assay-logo.svg" alt="Assay Logo" width={170} height={40} className="h-9 w-auto opacity-90" />
-              <p className="text-xs text-zinc-400 max-w-md">
-                An autonomous merchant treasury operator on Cleanverse rails, deployed on Monad testnet.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-6 text-xs font-medium text-zinc-400">
-              <a href="#architecture" className="hover:text-zinc-100 transition-colors">
-                Architecture
-              </a>
-              <a href="#how-it-works" className="hover:text-zinc-100 transition-colors">
-                Workflow
-              </a>
-              <a href="#features" className="hover:text-zinc-100 transition-colors">
-                Capabilities
-              </a>
-              <Link href="/docs" className="hover:text-zinc-100 transition-colors">
-                Docs
-              </Link>
-              <Link href={primaryHref} className="text-[#84A93C] font-semibold hover:underline">
-                {primaryLabel}
-              </Link>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
-            <div>Originally built for Cleanverse Build: Trusted Assets · Monad Foundation</div>
-            <div>Cleanverse API v3 · Monad Testnet</div>
+      <section id="workflow" className="border-b border-white/10">
+        <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:py-28">
+          <p className="text-sm font-black uppercase tracking-[.2em] text-[#a8d14a]">One clear operating loop</p><h2 className="mt-4 max-w-3xl text-4xl font-black tracking-tight sm:text-5xl">From wallet activity to a defensible decision.</h2>
+          <div className="mt-14 grid gap-0 lg:grid-cols-4">
+            <Step number="01" icon={<WalletCards />} title="Money appears" body="Assay detects a real incoming aUSDC transfer or receives a payout request." />
+            <Step number="02" icon={<ShieldCheck />} title="Cleanverse checks it" body="A‑Pass and asset rules determine whether the counterparty is eligible." />
+            <Step number="03" icon={<Radar />} title="Assay judges timing" body="Amount, counterparty history, and reserves produce ALLOW, HOLD, or ESCALATE." />
+            <Step number="04" icon={<FileCheck2 />} title="Your evidence is ready" body="Decision, compliance result, transaction hash, and report stay linked for review." last />
           </div>
         </div>
-      </footer>
-    </div>
-  );
+      </section>
+
+      <section id="proof" className="bg-[#101411]">
+        <div className="mx-auto grid max-w-7xl gap-14 px-5 py-20 sm:px-8 lg:grid-cols-2 lg:py-28">
+          <div><p className="text-sm font-black uppercase tracking-[.2em] text-[#a8d14a]">What changes for the merchant</p><h2 className="mt-4 text-4xl font-black tracking-tight sm:text-5xl">A treasury inbox, not another blockchain dashboard.</h2><p className="mt-6 text-lg leading-8 text-zinc-300">Your team sees what needs attention first: finish setup, review an exception, or send an eligible payout. Chain details remain available as evidence—not as the primary interface.</p></div>
+          <div className="space-y-4"><Outcome icon={<CheckCircle2 />} title="Clear normal money automatically" body="Routine verified activity becomes cleared working capital." /><Outcome icon={<CirclePause />} title="Quarantine unusual money" body="Compliant but abnormal incoming funds stay visible without silently becoming spendable." /><Outcome icon={<Landmark />} title="Protect operating reserves" body="Payouts that breach your cleared-inflow policy wait for review." /><Outcome icon={<FileCheck2 />} title="Explain every decision" body="Operators and auditors see the rule, signal, decision, and on-chain result together." /></div>
+        </div>
+      </section>
+
+      <section className="border-t border-white/10">
+        <div className="mx-auto flex max-w-5xl flex-col items-center px-5 py-20 text-center sm:px-8"><ArrowDown className="h-7 w-7 text-[#a8d14a]" /><h2 className="mt-5 text-4xl font-black tracking-tight sm:text-5xl">Create the workspace. Assay handles the infrastructure.</h2><p className="mt-5 max-w-2xl text-lg leading-8 text-zinc-300">Start with a managed Monad sandbox wallet, complete Cleanverse verification, fund test assets, and watch the first real decision arrive.</p><Link href={appHref} className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[#a8d14a] px-8 py-4 text-base font-extrabold text-[#10150b]">{user ? "Open workspace" : "Start free sandbox"}<ArrowRight className="h-5 w-5" /></Link></div>
+      </section>
+    </main>
+    <footer className="border-t border-white/10"><div className="mx-auto flex max-w-7xl flex-col justify-between gap-5 px-5 py-10 text-sm text-zinc-400 sm:flex-row sm:px-8"><span>Assay · Merchant treasury decisions on Cleanverse rails</span><div className="flex gap-6"><Link href="/docs" className="text-white">Operating guide</Link><span>Monad testnet</span></div></div></footer>
+  </div>;
 }
 
-function Capability({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) {
-  return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-zinc-200">{icon}</div>
-      <h3 className="font-bold text-zinc-100">{title}</h3>
-      <p className="text-xs text-zinc-400 leading-relaxed">{body}</p>
-    </div>
-  );
-}
+function Signal({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: string; tone: string }) { return <div className="flex items-center gap-4"> <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/5 text-[#a8d14a] [&>svg]:h-5 [&>svg]:w-5">{icon}</span><div><p className="text-sm text-zinc-400">{label}</p><p className={`mt-1 text-base font-bold ${tone}`}>{value}</p></div></div>; }
+function Step({ number, icon, title, body, last }: { number: string; icon: React.ReactNode; title: string; body: string; last?: boolean }) { return <div className={`relative border-white/15 py-7 lg:border-t lg:px-6 ${last ? "" : "lg:border-r"}`}><div className="flex items-center justify-between"><span className="text-sm font-black text-[#a8d14a]">{number}</span><span className="text-zinc-400 [&>svg]:h-6 [&>svg]:w-6">{icon}</span></div><h3 className="mt-8 text-2xl font-black">{title}</h3><p className="mt-3 text-base leading-7 text-zinc-300">{body}</p></div>; }
+function Outcome({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) { return <div className="flex gap-5 border-b border-white/10 pb-5"><span className="mt-1 text-[#a8d14a] [&>svg]:h-6 [&>svg]:w-6">{icon}</span><div><h3 className="text-xl font-black text-white">{title}</h3><p className="mt-2 text-base leading-7 text-zinc-300">{body}</p></div></div>; }

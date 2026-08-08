@@ -13,7 +13,7 @@ import { summarizeLedger } from "@/lib/log/aggregate";
 import { listDecisions } from "@/lib/log/store";
 import { getMerchantReadiness } from "@/lib/merchants/readiness";
 import type { DecisionLogEntry } from "@/lib/log/types";
-import { ArrowLeft, CheckCircle2, ShieldCheck, Settings } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CircleDot, ShieldCheck, Settings } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -83,12 +83,12 @@ export default async function MerchantDashboardPage({ params }: { params: Promis
 
   return (
     <div className="flex flex-1 flex-col bg-zinc-50/60 dark:bg-zinc-950 font-sans text-zinc-900 dark:text-zinc-100">
-      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-6 py-10">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-9 px-5 py-10 sm:px-8">
         <header className="flex flex-col gap-4 border-b border-zinc-200/80 pb-6 dark:border-zinc-800/80">
           <div className="flex items-center justify-between">
             <Link
               href="/app"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
               All merchants
@@ -109,7 +109,7 @@ export default async function MerchantDashboardPage({ params }: { params: Promis
               <Image src="/assay-icon.svg" alt="Assay A-Chip Mark" width={40} height={40} className="rounded-xl shadow-sm" />
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">{merchant.name}</h1>
+                  <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">{merchant.name}</h1>
                   <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-[10px] font-bold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
                     Monad Testnet
                   </span>
@@ -121,6 +121,17 @@ export default async function MerchantDashboardPage({ params }: { params: Promis
         </header>
 
         <ReadinessPanel readiness={readiness} />
+
+        <section className="rounded-2xl border border-zinc-700 bg-zinc-900 p-6 shadow-sm">
+          <div className="grid gap-7 lg:grid-cols-[.7fr_1.3fr]">
+            <div><p className="text-sm font-extrabold uppercase tracking-[.16em] text-[#a8d14a]">Start here</p><h2 className="mt-3 text-2xl font-black text-white">{readiness.identity !== "ready" ? "Finish activating this workspace" : !readiness.gasReady || !readiness.tokenReady ? "Fund the sandbox wallet" : "Your treasury operator is ready"}</h2><p className="mt-3 text-base leading-7 text-zinc-300">{readiness.identity !== "ready" ? "Assay cannot evaluate or settle verified money until this wallet receives its Cleanverse identity." : !readiness.gasReady || !readiness.tokenReady ? "The identity is ready. Add testnet gas and settlement tokens before attempting a payout." : "Send a small incoming transfer or create a payout. Assay will judge it and show any exception in the review queue."}</p></div>
+            <ol className="grid gap-3 sm:grid-cols-3">
+              <GuideStep done={readiness.identity === "ready"} number="1" title="Verify identity" body="Activate the wallet with Cleanverse." />
+              <GuideStep done={readiness.gasReady && readiness.tokenReady} number="2" title="Add test funds" body="Fund MON gas and sandbox aUSDC." />
+              <GuideStep done={entries.length > 0} number="3" title="Run first payment" body="Receive or send a small test transfer." />
+            </ol>
+          </div>
+        </section>
 
         <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <PayoutForm merchantId={merchantId} />
@@ -319,4 +330,8 @@ export default async function MerchantDashboardPage({ params }: { params: Promis
       </div>
     </div>
   );
+}
+
+function GuideStep({ done, number, title, body }: { done: boolean; number: string; title: string; body: string }) {
+  return <li className={`rounded-xl border p-4 ${done ? "border-emerald-800 bg-emerald-950/30" : "border-zinc-700 bg-zinc-950/50"}`}><div className="flex items-center gap-2">{done ? <CheckCircle2 className="h-5 w-5 text-emerald-400" /> : <CircleDot className="h-5 w-5 text-[#a8d14a]" />}<span className="text-sm font-bold text-white">Step {number}</span></div><h3 className="mt-4 text-base font-bold text-white">{title}</h3><p className="mt-2 text-sm leading-6 text-zinc-400">{body}</p></li>;
 }

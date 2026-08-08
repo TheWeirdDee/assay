@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { createMerchantAction, type CreateMerchantState } from "@/app/actions/merchants";
-import { AlertTriangle, ArrowRight, Check, Copy, Loader2 } from "lucide-react";
+import { AlertTriangle, ArrowRight, Check, Copy, Eye, EyeOff, Loader2 } from "lucide-react";
 
 const inputClass = "w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-sm text-zinc-100 outline-none focus:border-[#84A93C]";
 
@@ -48,5 +48,6 @@ export function NewMerchantForm() {
 }
 
 function Field({ label, value, sensitive }: { label: string; value: string; sensitive?: boolean }) {
-  return <div className="flex flex-col gap-1"><span className="text-[11px] font-semibold text-zinc-400">{label}</span><div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 font-mono text-xs text-zinc-200"><span className="flex-1 break-all">{value}</span><button type="button" onClick={() => navigator.clipboard.writeText(value)} aria-label={`Copy ${label}`}><Copy className="h-3.5 w-3.5" /></button></div>{sensitive && <span className="text-[10px] text-amber-500">Store this in a password manager.</span>}</div>;
+  const [revealed, setRevealed] = useState(!sensitive);
+  return <div className="flex flex-col gap-2"><span className="text-sm font-semibold text-zinc-300">{label}</span><div className="flex items-center gap-3 rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 font-mono text-sm text-white"><span className="flex-1 break-all">{revealed ? value : "••••••••••••••••••••••••••••••••"}</span>{sensitive && <button type="button" onClick={() => setRevealed((current) => !current)} className="text-zinc-400 hover:text-white" aria-label={revealed ? "Hide recovery key" : "Reveal recovery key"}>{revealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>}<button type="button" onClick={() => navigator.clipboard.writeText(value)} className="text-zinc-400 hover:text-white" aria-label={`Copy ${label}`}><Copy className="h-4 w-4" /></button></div>{sensitive && <span className="text-sm text-amber-400">Copy this into a password manager. Never share or screenshot it.</span>}</div>;
 }

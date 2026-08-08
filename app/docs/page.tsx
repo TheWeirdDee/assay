@@ -1,227 +1,55 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  ArrowRight,
-  ShieldCheck,
-  Sliders,
-  Scale,
-  Building,
-  Terminal,
-  Download,
-  BookOpen,
-} from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, CirclePause, FileDown, HelpCircle, KeyRound, Landmark, Radar, WalletCards } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
+const nav = [["getting-started", "Start here"], ["workspace", "Understand the workspace"], ["decisions", "Decision meanings"], ["payments", "Run a payment"], ["audit", "Audit evidence"], ["troubleshooting", "Troubleshooting"]];
+
 export default function DocsPage() {
-  return (
-    <div className="flex min-h-screen flex-col bg-[#080B09] text-zinc-100 font-sans antialiased selection:bg-[#84A93C] selection:text-zinc-950">
-      {/* Navbar */}
-      <header className="relative z-50 w-full border-b border-zinc-800/60 bg-[#080B09]/80 backdrop-blur-xl sticky top-0">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-6">
-            <Link href="/">
-              <Image
-                src="/assay-logo.svg"
-                alt="Assay Logo"
-                width={150}
-                height={36}
-                priority
-                className="h-8 w-auto"
-              />
-            </Link>
-            <span className="hidden sm:inline-block h-4 w-[1px] bg-zinc-800" />
-            <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-400">
-              <BookOpen className="h-3.5 w-3.5 text-[#84A93C]" /> Technical Documentation
-            </span>
-          </div>
+  return <div className="min-h-screen bg-[#080b09] text-white">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#080b09]/90 backdrop-blur-xl"><div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8"><Link href="/"><Image src="/assay-logo.svg" alt="Assay" width={145} height={35} className="h-9 w-auto" /></Link><div className="flex items-center gap-4"><Link href="/" className="hidden items-center gap-2 text-sm font-bold text-zinc-300 sm:flex"><ArrowLeft className="h-4 w-4" />Overview</Link><Link href="/app" className="inline-flex items-center gap-2 rounded-full bg-[#a8d14a] px-5 py-2.5 text-sm font-extrabold text-zinc-950">Open workspace<ArrowRight className="h-4 w-4" /></Link></div></div></header>
+    <div className="mx-auto grid max-w-7xl gap-12 px-5 py-12 sm:px-8 lg:grid-cols-[250px_1fr] lg:py-16">
+      <aside className="hidden lg:block"><div className="sticky top-28"><p className="mb-4 text-sm font-extrabold uppercase tracking-[.16em] text-[#a8d14a]">Operating guide</p><nav className="space-y-1">{nav.map(([id, label]) => <a key={id} href={`#${id}`} className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-zinc-300 hover:bg-white/5 hover:text-white">{label}</a>)}</nav><div className="mt-8 rounded-xl border border-white/10 bg-white/5 p-4 text-sm leading-6 text-zinc-300"><strong className="text-white">Sandbox reminder</strong><br />Use only testnet MON and aUSDC. Never send real assets to a managed sandbox wallet.</div></div></aside>
+      <main className="min-w-0 max-w-4xl">
+        <section className="border-b border-white/10 pb-14"><p className="text-sm font-extrabold uppercase tracking-[.2em] text-[#a8d14a]">Assay user guide</p><h1 className="mt-4 text-4xl font-black tracking-tight sm:text-6xl">Run your first treasury decision.</h1><p className="mt-6 max-w-3xl text-lg leading-8 text-zinc-300">Assay watches verified stablecoin activity, decides whether it fits your operating policy, and gives your team a review queue for exceptions. This guide takes you from an empty account to a real Monad testnet transaction.</p></section>
 
-          <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-400 hover:text-zinc-100 transition-colors"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Overview
-            </Link>
-            <Link
-              href="/app"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#84A93C] px-4 py-2 text-xs font-bold text-zinc-950 transition-all hover:bg-[#96bc46] shadow-sm"
-            >
-              Go to app
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </header>
+        <GuideSection id="getting-started" eyebrow="5-minute setup" title="Start here: activate your workspace">
+          <p>Create an account and choose <strong>Create workspace</strong>. Assay creates a managed testnet wallet and automatically configures Monad, Cleanverse, and aUSDC.</p>
+          <div className="mt-8 space-y-4"><Instruction number="1" title="Save the recovery key">Copy it to a password manager. It is hidden by default and shown only during creation. Anyone with this key controls that test wallet.</Instruction><Instruction number="2" title="Verify the wallet">Open your workspace and press <strong>Verify identity</strong>. Complete the Cleanverse sandbox flow, then return and refresh.</Instruction><Instruction number="3" title="Add test assets">Send a small amount of Monad testnet MON for gas and sandbox aUSDC for settlements. The readiness panel turns green when both arrive.</Instruction><Instruction number="4" title="Run a small payment">Send a test inbound transfer to the workspace address or enter a recipient and amount under Pay a supplier.</Instruction></div>
+          <Callout icon={<AlertTriangle />} title="Do not fund a key shown in a screenshot">If a recovery key has been shared or screenshotted, consider that wallet compromised. Create a new workspace and use the new address.</Callout>
+        </GuideSection>
 
-      {/* Docs Body */}
-      <div className="mx-auto flex w-full max-w-6xl flex-1 gap-10 px-6 py-12">
-        {/* Sidebar Nav */}
-        <aside className="hidden lg:flex w-64 flex-col gap-6 sticky top-24 h-fit text-xs">
-          <div className="flex flex-col gap-1">
-            <span className="font-bold uppercase tracking-wider text-zinc-500 text-[10px] pb-1">Specification</span>
-            <a href="#overview" className="rounded-lg px-3 py-2 font-medium text-zinc-300 hover:bg-zinc-900 hover:text-[#84A93C] transition-colors">
-              1. System Overview
-            </a>
-            <a href="#strip-test" className="rounded-lg px-3 py-2 font-medium text-zinc-300 hover:bg-zinc-900 hover:text-[#84A93C] transition-colors">
-              2. Architecture &amp; Strip Test
-            </a>
-            <a href="#primitives" className="rounded-lg px-3 py-2 font-medium text-zinc-300 hover:bg-zinc-900 hover:text-[#84A93C] transition-colors">
-              3. Cleanverse Native Primitives
-            </a>
-            <a href="#judgment-engine" className="rounded-lg px-3 py-2 font-medium text-zinc-300 hover:bg-zinc-900 hover:text-[#84A93C] transition-colors">
-              4. Scoring &amp; Decision Engine
-            </a>
-            <a href="#institutional" className="rounded-lg px-3 py-2 font-medium text-zinc-300 hover:bg-zinc-900 hover:text-[#84A93C] transition-colors">
-              5. Institutional Implementation
-            </a>
-          </div>
+        <GuideSection id="workspace" eyebrow="What you are looking at" title="The workspace is ordered by what needs attention">
+          <div className="grid gap-5 sm:grid-cols-2"><Definition icon={<WalletCards />} title="Readiness">Shows whether identity, gas, and settlement funds are available. Fix red or amber items before attempting payments.</Definition><Definition icon={<Radar />} title="Start here">A three-step checklist: verify, fund, then run the first payment.</Definition><Definition icon={<CirclePause />} title="Review queue">Only payments requiring a human decision appear here. Approving inbound money clears its ledger quarantine; it does not send money back.</Definition><Definition icon={<Landmark />} title="Cash position">Compares cleared incoming money with committed outgoing money so Assay can prevent reserve-policy breaches.</Definition></div>
+        </GuideSection>
 
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 flex flex-col gap-2">
-            <span className="font-semibold text-zinc-200">Export Dual Audit Logs</span>
-            <p className="text-zinc-400 text-[11px] leading-relaxed">
-              Download combined CCP compliance proofs + Assay operational decision rationale.
-            </p>
-            <a
-              href="/api/export-log?format=json"
-              download="assay-audit-log.json"
-              className="mt-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 font-semibold text-zinc-200 hover:bg-zinc-700 transition-colors text-xs"
-            >
-              <Download className="h-3 w-3" /> Download JSON Pack
-            </a>
-          </div>
-        </aside>
+        <GuideSection id="decisions" eyebrow="Plain-language states" title="What ALLOW, HOLD, ESCALATE, and BLOCK mean">
+          <div className="overflow-hidden rounded-2xl border border-white/10"><Decision name="ALLOW" tone="text-emerald-300" meaning="The payment fits your operating policy." result="An outbound payment proceeds to Cleanverse and settlement. An inbound payment becomes cleared." /><Decision name="HOLD" tone="text-amber-300" meaning="Moving money now would breach a reserve or operating rule." result="No outbound transfer occurs. A finance operator reviews it." /><Decision name="ESCALATE" tone="text-amber-300" meaning="Signals combine into an unusual pattern—for example, a large amount from a new party." result="The payment enters the review queue with an explanation." /><Decision name="BLOCK" tone="text-red-300" meaning="Cleanverse says the wallet or asset is not eligible." result="The transfer does not execute. Assay cannot override compliance." /></div>
+        </GuideSection>
 
-        {/* Main Content Column */}
-        <main className="flex flex-1 flex-col gap-12 text-sm">
-          {/* Section 1: Overview */}
-          <section id="overview" className="flex flex-col gap-4 border-b border-zinc-800/80 pb-10">
-            <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 text-xs font-semibold text-zinc-400 w-fit">
-              <Terminal className="h-3.5 w-3.5 text-[#84A93C]" /> Technical Architecture Specification
-            </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-zinc-50 sm:text-4xl">
-              Assay — Technical Architecture
-            </h1>
-            <p className="text-zinc-400 leading-relaxed text-base">
-              Assay makes the operational decisions a compliance rail never makes: <strong className="text-zinc-200">when to pay, whether to hold, how to sequence, and when to escalate</strong>. Every decision is executed strictly through Cleanverse&apos;s verified compliance rails on Monad testnet.
-            </p>
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6 backdrop-blur-md">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#84A93C]">Core Product Thesis</span>
-              <p className="text-xl font-bold text-zinc-100 pt-1">
-                &ldquo;Cleanverse answers &lsquo;is it allowed?&rsquo;. Assay answers &lsquo;should it move now?&rsquo;.&rdquo;
-              </p>
-            </div>
-          </section>
+        <GuideSection id="payments" eyebrow="The money loop" title="Receive, review, and pay">
+          <h3 className="text-xl font-black">Receiving money</h3><p>Copy the workspace wallet address and send sandbox aUSDC to it. Assay’s scheduled job checks the chain daily on the free hosting plan; use <strong>Sync inbound transfers</strong> when testing and you want the result immediately.</p>
+          <h3 className="mt-8 text-xl font-black">Paying a supplier</h3><p>Enter a recipient wallet and decimal aUSDC amount. Assay first evaluates cash policy, then calls Cleanverse verification, then signs the on-chain transfer. A result message confirms settlement, review, or compliance failure.</p>
+          <h3 className="mt-8 text-xl font-black">Reviewing an exception</h3><p><strong>Approve</strong> accepts the operating risk. Outbound approvals recheck compliance and settle. Inbound approvals only mark already-arrived funds as cleared. <strong>Reject</strong> closes the review without initiating a transfer.</p>
+        </GuideSection>
 
-          {/* Section 2: Anti-Wrapper Proof */}
-          <section id="strip-test" className="flex flex-col gap-4 border-b border-zinc-800/80 pb-10">
-            <h2 className="text-2xl font-bold text-zinc-100 flex items-center gap-2">
-              <Scale className="h-5 w-5 text-[#84A93C]" />
-              Architecture &amp; Anti-Wrapper Strip Test
-            </h2>
-            <p className="text-zinc-400 leading-relaxed">
-              Assay is an operational decision layer on top of Cleanverse primitives, not a re-skin of compliance:
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 flex flex-col gap-2">
-                <span className="font-bold text-zinc-200">Strip Cleanverse Out</span>
-                <p className="text-xs text-zinc-400 leading-relaxed">
-                  Assay continues to calculate z-scores, check solvency reserves, sequence payments, and escalate anomalies—it simply loses the on-chain compliance guarantee.
-                </p>
-              </div>
-              <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 flex flex-col gap-2">
-                <span className="font-bold text-zinc-200">Strip Assay Out</span>
-                <p className="text-xs text-zinc-400 leading-relaxed">
-                  You are left with native Cleanverse: compliant transfers operated manually by a human treasurer without automated cashflow timing or solvency rules.
-                </p>
-              </div>
-            </div>
-          </section>
+        <GuideSection id="audit" eyebrow="Evidence" title="Every decision stays explainable">
+          <p>The activity table links the payment, risk signals, Assay decision, Cleanverse status, and transaction hash. When Cleanverse has indexed the transaction, the compliance report link appears alongside it.</p><div className="mt-7 flex items-start gap-4 rounded-2xl border border-[#a8d14a]/30 bg-[#a8d14a]/10 p-5"><FileDown className="mt-1 h-6 w-6 shrink-0 text-[#a8d14a]" /><div><h3 className="text-lg font-black">Export from the workspace header</h3><p className="mt-2 text-base leading-7 text-zinc-300">JSON preserves the complete structured record. CSV is easier for finance teams to open in spreadsheets. Both exports are scoped to the signed-in workspace owner.</p></div></div>
+        </GuideSection>
 
-          {/* Section 3: Cleanverse Native Integration */}
-          <section id="primitives" className="flex flex-col gap-4 border-b border-zinc-800/80 pb-10">
-            <h2 className="text-2xl font-bold text-zinc-100 flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5 text-[#84A93C]" />
-              Cleanverse Native Primitives Integration
-            </h2>
-            <p className="text-zinc-400 leading-relaxed">
-              Assay composes Cleanverse v3 REST APIs and Monad smart contracts into an automated money loop:
-            </p>
-            <ul className="flex flex-col gap-3 font-mono text-xs">
-              <li className="rounded-xl border border-zinc-800/80 bg-zinc-900/60 p-4 flex flex-col gap-1">
-                <span className="font-bold text-zinc-200 font-sans">A-Pass (CVI — Cleanverse Verified Identity)</span>
-                <span className="text-zinc-400 font-sans text-xs">
-                  Mandatory pre-flight identity check (`/verify_apass`). Non-transferable identity token bound to verified wallets.
-                </span>
-              </li>
-              <li className="rounded-xl border border-zinc-800/80 bg-zinc-900/60 p-4 flex flex-col gap-1">
-                <span className="font-bold text-zinc-200 font-sans">A-Token (CVA — Cleanverse Verified Assets)</span>
-                <span className="text-zinc-400 font-sans text-xs">
-                  Native settlement wrapper on Monad testnet. Only transferable between A-Pass verified addresses.
-                </span>
-              </li>
-              <li className="rounded-xl border border-zinc-800/80 bg-zinc-900/60 p-4 flex flex-col gap-1">
-                <span className="font-bold text-zinc-200 font-sans">CCP Protocol &amp; Travel Rule Audit Reports</span>
-                <span className="text-zinc-400 font-sans text-xs">
-                  Autonomous pre-transaction compliance evaluation + disclosable audit report generation via `/download_travel_rule`.
-                </span>
-              </li>
-            </ul>
-          </section>
-
-          {/* Section 4: Judgment Engine */}
-          <section id="judgment-engine" className="flex flex-col gap-4 border-b border-zinc-800/80 pb-10">
-            <h2 className="text-2xl font-bold text-zinc-100 flex items-center gap-2">
-              <Sliders className="h-5 w-5 text-[#84A93C]" />
-              Multi-Signal Judgment Engine
-            </h2>
-            <p className="text-zinc-400 leading-relaxed">
-              Assay evaluates three deterministic signals in context to produce an operational verdict (ALLOW, HOLD, ESCALATE, BLOCK):
-            </p>
-            <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4 font-mono text-xs text-zinc-300 leading-relaxed overflow-x-auto">
-              <div>z_score = (payment_amount - merchant_mean) / merchant_std</div>
-              <div>cp_risk = is_known_counterparty(from_address) ? 0.0 : 1.0</div>
-              <div>solvency_breach = (committed_outflows + payment_amount) &gt; cleared_inflows</div>
-              <div className="pt-2 text-[#84A93C]"># Decision Logic: Combination over single thresholds</div>
-              <div>if (solvency_breach) return HOLD; // Protect reserve balance</div>
-              <div>if (z_score &gt;= tolerance &amp;&amp; cp_risk == 1.0) return ESCALATE; // Large &amp; new party</div>
-              <div>if (z_score &gt;= tolerance &amp;&amp; cp_risk == 0.0) return ALLOW; // Large size from trusted party</div>
-            </div>
-          </section>
-
-          {/* Section 5: Institutional Implementation */}
-          <section id="institutional" className="flex flex-col gap-4 pb-6">
-            <h2 className="text-2xl font-bold text-zinc-100 flex items-center gap-2">
-              <Building className="h-5 w-5 text-[#84A93C]" />
-              Institutional Implementation &amp; Merchant Readiness
-            </h2>
-            <p className="text-zinc-400 leading-relaxed">
-              Assay operates strictly as a software management layer on top of licensed rails (matching Cleanverse positioning) — it never takes ownership of merchant funds or trades on their behalf. It does hold a signing key per merchant, encrypted at rest and scoped to that merchant&apos;s Cleanverse-verified transfer path only, which is what makes autonomous settlement possible; that mandate, not custody, is the trust model. A merchant or PSP can run Assay in shadow-mode day one, benefiting from automated solvency controls and dual disclosable audit reports.
-            </p>
-            <div className="pt-4">
-              <Link
-                href="/app"
-                className="inline-flex items-center gap-2 rounded-xl bg-[#84A93C] px-6 py-3 text-xs font-bold text-zinc-950 transition-all hover:bg-[#96bc46]"
-              >
-                Connect a merchant <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </section>
-        </main>
-      </div>
-
-      {/* Footer */}
-      <footer className="w-full border-t border-zinc-800/80 bg-[#080B09] py-10">
-        <div className="mx-auto flex w-full max-w-6xl flex-col sm:flex-row items-center justify-between gap-4 px-6 text-xs text-zinc-500">
-          <div className="flex items-center gap-2">
-            <Image src="/assay-logo.svg" alt="Assay Logo" width={120} height={28} className="h-7 w-auto opacity-80" />
-            <span>— Technical Documentation</span>
-          </div>
-          <div>Cleanverse Build: Trusted Assets Hackathon · Monad Testnet</div>
-        </div>
-      </footer>
+        <GuideSection id="troubleshooting" eyebrow="When something is not green" title="Troubleshooting">
+          <Trouble problem="A‑Pass does not exist" fix="Press Verify identity and complete the Cleanverse page. If the link fails, ask Cleanverse to enable A‑Pass generation or hosted verification for Assay’s sandbox API ID." /><Trouble problem="0.0000 MON" fix="The wallet cannot pay blockchain gas. Obtain Monad testnet MON and send it to the displayed workspace address." /><Trouble problem="0 aUSDC" fix="Ask Cleanverse for sandbox aUSDC faucet or distribution access, then fund the workspace address." /><Trouble problem="A payout remains held" fix="Open the review queue and read the stated reserve or anomaly reason. Approve only if you understand the exception." /><Trouble problem="No inbound payment appears" fix="Press Sync inbound transfers. Confirm the token was the configured Cleanverse USD contract on Monad testnet, not ordinary USDC." />
+          <Callout icon={<KeyRound />} title="Security boundary">Managed wallets are suitable for testnet demonstrations. Real-value production requires an embedded wallet, external signer, or scoped smart-account session key plus independent security review.</Callout>
+        </GuideSection>
+      </main>
     </div>
-  );
+  </div>;
 }
+
+function GuideSection({ id, eyebrow, title, children }: { id: string; eyebrow: string; title: string; children: React.ReactNode }) { return <section id={id} className="scroll-mt-28 border-b border-white/10 py-14 last:border-0"><p className="text-sm font-extrabold uppercase tracking-[.18em] text-[#a8d14a]">{eyebrow}</p><h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">{title}</h2><div className="mt-6 text-base leading-8 text-zinc-300">{children}</div></section>; }
+function Instruction({ number, title, children }: { number: string; title: string; children: React.ReactNode }) { return <div className="grid gap-3 border-b border-white/10 pb-4 sm:grid-cols-[44px_1fr]"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#a8d14a] text-sm font-black text-zinc-950">{number}</span><div><h3 className="text-lg font-black text-white">{title}</h3><p className="mt-1 text-base leading-7 text-zinc-300">{children}</p></div></div>; }
+function Definition({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) { return <div className="border-l-2 border-[#a8d14a] pl-5"><span className="text-[#a8d14a] [&>svg]:h-5 [&>svg]:w-5">{icon}</span><h3 className="mt-4 text-xl font-black text-white">{title}</h3><p className="mt-2 text-base leading-7 text-zinc-300">{children}</p></div>; }
+function Decision({ name, tone, meaning, result }: { name: string; tone: string; meaning: string; result: string }) { return <div className="grid gap-2 border-b border-white/10 p-5 last:border-0 sm:grid-cols-[120px_1fr]"><strong className={`text-base ${tone}`}>{name}</strong><div><p className="text-white">{meaning}</p><p className="mt-1 text-sm text-zinc-400">Result: {result}</p></div></div>; }
+function Trouble({ problem, fix }: { problem: string; fix: string }) { return <div className="border-b border-white/10 py-5"><h3 className="flex items-center gap-2 text-lg font-black text-white"><HelpCircle className="h-5 w-5 text-[#a8d14a]" />{problem}</h3><p className="mt-2 text-base leading-7 text-zinc-300">{fix}</p></div>; }
+function Callout({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) { return <div className="mt-8 flex gap-4 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-5"><span className="mt-1 text-amber-300 [&>svg]:h-6 [&>svg]:w-6">{icon}</span><div><h3 className="text-lg font-black text-white">{title}</h3><p className="mt-2 text-base leading-7 text-zinc-300">{children}</p></div></div>; }
