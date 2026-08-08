@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Assay
 
-## Getting Started
+**An autonomous treasury operator for on-chain merchants.** Assay makes the decisions a compliance
+rail never makes — *when* to pay, whether to *hold*, how to *sequence*, when to *escalate* — and
+executes them only through Cleanverse's verified rails, so every move it decides is also provably
+clean. **Cleanverse answers "is this transfer allowed?"; Assay answers "should this money move, now?"**
 
-First, run the development server:
+Deployed on **Monad testnet**, built against **Cleanverse API v3**.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## What this actually is
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+A multi-tenant web app. Anyone can create an account, create a merchant workspace on Assay's
+Cleanverse sandbox integration, and run a real treasury operator against live Cleanverse
+compliance checks and real on-chain settlement on Monad. It is not a fixed single-merchant demo and
+there is no simulate-a-payment button — inbound payments are detected from real on-chain transfers,
+outbound payments are real merchant-submitted payouts, and the judgment engine's decision on each one
+is deterministic and logged.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## The gap Assay fills
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Cleanverse already makes a transfer compliant — clean money, verified parties, sanctions/Travel-Rule,
+audit reports. But a business's money isn't one transfer; it's a continuous stream of **operating
+decisions** no compliance rail makes:
 
-## Learn More
+- This inbound is verified-clean but 3× normal from a new counterparty — accept, or **hold for review**?
+- Committed outflows exceed cleared inflows — **pause payouts**?
+- In what **order** do I receive → judge → release → pay out → reconcile?
 
-To learn more about Next.js, take a look at the following resources:
+Compliance says a transfer is *permitted*. It never says it's *timely, wise, or should happen now*.
+That operating judgment is the gap Assay fills.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## What Assay does
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Layer underneath — Cleanverse (native):** verify A-Pass, settle in clean A-Token, CCP audit. Assay
+  calls it; never rebuilds it. A compliance block is final and Assay never overrides it.
+- **Layer on top — Assay (the product):** a per-merchant **learned baseline** + a **multi-signal
+  reasoned decision** (amount anomaly, counterparty history, solvency) → **ALLOW / HOLD / ESCALATE**.
+  The decision is computed by a small deterministic engine (`lib/judgment/engine.ts`) — not an LLM —
+  because a money-moving decision in a compliance product has to be auditable and reproducible. A
+  real Claude API call (`lib/judgment/llm.ts`) separately narrates *why* the engine decided what it
+  decided, in plain language, for the decision log; if that call fails or is unavailable, the engine's
+  own plain-language rationale is used instead, and the decision itself is unaffected either way.
 
-## Deploy on Vercel
+## Why it's not a wrapper
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Two payments with the **same amount** get **opposite decisions** because Assay reasons over
+counterparty and solvency, not one number — a threshold can't do that (`lib/judgment/engine.test.ts`
+asserts this directly). Strip Cleanverse out and Assay still makes real treasury judgments; strip
+Assay out and you have Cleanverse — compliant transfers you operate by hand. Neither is the other.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## On custody
+
+Assay is not a custodian in the exchange sense — it never takes ownership of merchant funds or trades
+on their behalf. It is not custody-free either: each merchant hands Assay a signing key (generated for
+them, or their own — their choice at onboarding), encrypted at rest with AES-256-GCM, usable only to
+submit transfers through Cleanverse's verified rails for that merchant. That scoped mandate is what
+makes autonomous settlement possible, and it's disclosed here rather than described as its opposite.
+
+## Architecture
+
+| Layer | Implementation |
+|---|---|
+| Auth | Email/password, scrypt hashing, DB-backed sessions (`lib/auth`) |
+| Multi-tenancy | One Postgres row per merchant; each carries its own managed sandbox wallet, A-Token, policy, baseline, and decision log (`lib/merchants`) |
+| Judgment engine | Deterministic multi-signal reasoning (`lib/judgment/engine.ts`), LLM-narrated rationale (`lib/judgment/llm.ts`) |
+| Compliance | Cleanverse API v3 — `verify_apass`, `query_txs`, `download_travel_rule` (`lib/cleanverse`) |
+| Settlement | viem against Monad testnet, real `erc20Transfer` (`lib/chain`) |
+| Inbound detection | Polls A-Token `Transfer` events to the merchant's wallet since the last synced block (`lib/chain/inboundLogs.ts`, `lib/operator/inboundSync.ts`) — not a simulate button |
+| Persistence | Postgres (`lib/db`); every merchant's decision log and learned baseline live in the database, not flat files, so the app works on a real serverless/production deploy |
+| Web | Next.js 16 (webpack), Tailwind |
+
+Only Monad testnet has a real settlement client wired up today (`lib/chain/monad.ts`). Cleanverse
+itself is multi-chain, but onboarding is currently restricted to Monad — offering other chains without
+a real RPC client for them would just be a new version of the same honesty problem this rebuild was
+about fixing.
+
+## Running it
+
+1. **Provision Postgres.** Any Postgres 14+ works — neon.com / Supabase / Vercel Postgres all have a
+   free tier that takes a couple of minutes to set up.
+2. **Copy `.env.example` to `.env.local`** and fill in `DATABASE_URL`, Assay's server-side Cleanverse
+   credentials, optional `ANTHROPIC_API_KEY`, and generated secrets. Users never enter infrastructure secrets.
+3. **Run the migration:** `npm run db:migrate`
+4. **Start the app:** `npm run dev`
+5. **Sign up**, then create a workspace (`/app/new`). Assay selects Monad and aUSDC and creates a
+   managed sandbox wallet, showing its recovery key once.
+6. **Fund the wallet** with Monad testnet MON (for gas) and the A-Token you'll settle in, and make
+   sure it holds an A-Pass credential — Assay can't do anything until Cleanverse will.
+7. Configure a scheduler to call `GET /api/cron/poll-inbound` with `Authorization: Bearer $CRON_SECRET`.
+   The manual sync control remains available as a recovery/diagnostic action.
+
+## Tests
+
+`npm test` runs the pure-logic suite (judgment engine, aggregation, orchestration with mocked stores)
+unconditionally. The Postgres-backed store tests (`lib/log/store.test.ts`,
+`lib/baseline/store.test.ts`) additionally run whenever `DATABASE_URL` is set, against a real
+database — they create and tear down their own throwaway rows.
+
+## Honesty note
+
+This project was originally built in 48 hours for Cleanverse Build: Trusted Assets (Monad
+Foundation). What's described above is the current, hardened state — multi-tenant accounts, real
+Postgres persistence, real inbound-transfer detection, and an LLM call that does exactly what it's
+documented to do — not the original single-merchant hackathon build, which used flat-file storage,
+hardcoded demo scenarios, and a rationale generator that was templated text mislabeled as an LLM. The
+original planning docs (`PRD.md`, `ARCHITECTURE.md`, `BUILD_PHASES.md`, `DEMO_SCRIPT.md`) are kept for
+history but describe that earlier scope, not the app as it runs today.
