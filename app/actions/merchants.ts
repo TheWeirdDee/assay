@@ -4,8 +4,8 @@ import { z } from "zod";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import type { Hex } from "viem";
 import { requireUser } from "@/lib/auth/dal";
-import { createMerchant, updateMerchantPolicy } from "@/lib/merchants/store";
-import type { Chain } from "@/lib/cleanverse/client";
+import { createMerchant, decryptMerchantCreds, updateMerchantPolicy } from "@/lib/merchants/store";
+import { generateAPass, type Chain } from "@/lib/cleanverse/client";
 import { ASSAY_CHAIN, platformATokenAddress, platformCleanverseCreds } from "@/lib/cleanverse/platform";
 
 // Real on-chain settlement (lib/chain/monad.ts) and inbound-transfer polling only implement Monad
@@ -83,4 +83,41 @@ export async function updatePolicyAction(merchantId: string, formData: FormData)
   const { revalidatePath } = await import("next/cache");
   revalidatePath(`/app/${merchantId}/settings`);
   revalidatePath(`/app/${merchantId}`);
+}
+
+export interface GenerateApassActionResult {
+  ok: boolean;
+  message: string;
+}
+
+/**
+ * Issues a Cleanverse A-Pass for this merchant's managed wallet via the generate_apass API --
+ * the organizer-confirmed alternative to the SumSub document-upload magic-link. No ID/passport
+ * is collected or transmitted; generate_apass takes only customerId + wallet + expiry.
+ */
+export async function generateApassAction(merchantId: string): Promise<GenerateApassActionResult> {
+  const { requireMerchant } = await import("@/lib/auth/dal");
+  const { merchant } = await requireMerchant(merchantId);
+  const credentials = decryptMerchantCreds(merchant);
+
+  try {
+    const result = await generateAPass(
+      {
+        customerId: `ASSAY${merchant.merchant_wallet_address.slice(2, 18)}`,
+        expirationTime: Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60,
+        wallet: { address: merchant.merchant_wallet_address, chain: merchant.chain as Chain },
+      },
+      { apiId: credentials.apiId, apiKey: credentials.apiKey, baseUrl: credentials.baseUrl },
+    );
+
+    if (result.code !== "0000") {
+      return { ok: false, message: result.message || `Cleanverse rejected the request (code ${result.code}).` };
+    }
+
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath(`/app/${merchantId}`);
+    return { ok: true, message: `A-Pass issued — tier ${result.data.tier}. Refreshing workspace status.` };
+  } catch (error) {
+    return { ok: false, message: error instanceof Error ? error.message : "generate_apass request failed." };
+  }
 }

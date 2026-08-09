@@ -1,115 +1,292 @@
+<div align="center">
+
 # Assay
 
-**A scheduled treasury operator for on-chain merchants.** Assay makes the decisions a compliance
-rail never makes — *when* to pay, whether to *hold*, how to *sequence*, when to *escalate* — and
-executes them only through Cleanverse's verified rails, so every move it decides is also provably
-clean. **Cleanverse answers "is this transfer allowed?"; Assay answers "should this money move, now?"**
+**A scheduled treasury operator for on-chain merchants.**
 
-Deployed on **Monad testnet**, built against **Cleanverse API v3**.
+Cleanverse answers *"is this transfer allowed?"* — Assay answers *"should this money move, **now**?"*
 
-## What this actually is
+`Monad Testnet` · `Cleanverse API v3` · `Next.js 16` · `Postgres` · `wagmi/viem`
 
-A multi-tenant web app. Anyone can create an account, create a merchant workspace on Assay's
-Cleanverse sandbox integration, and run a real treasury operator against live Cleanverse
-compliance checks and real on-chain settlement on Monad. It is not a fixed single-merchant demo and
-there is no simulate-a-payment button — inbound payments are detected from real on-chain transfers
-by a daily scheduled scan on the hosted free tier or an operator-triggered immediate sync,
-outbound payments are real merchant-submitted payouts, and the judgment engine's decision on each one
-is deterministic and logged.
+</div>
+
+---
+
+## TL;DR
+
+Cleanverse makes a transfer *compliant* — clean money, verified parties, audit-ready reporting. But a business's money isn't one transfer; it's a continuous stream of operating decisions no compliance rail makes: *when* to pay, *whether* to hold, *how* to sequence inflows against outflows, *when* to escalate to a human. **Assay is the judgment layer that makes those decisions and executes them only through Cleanverse's verified rails** — so every move it decides is also provably clean.
+
+Two payments of the *same amount* can get opposite decisions, because Assay reasons over counterparty history and solvency, not a single threshold. Strip Cleanverse out and Assay still makes real treasury judgments; strip Assay out and you have Cleanverse — compliant transfers you operate by hand. Neither is the other.
+
+---
 
 ## The gap Assay fills
 
-Cleanverse already makes a transfer compliant — clean money, verified parties, and transaction
-reporting. But a business's money isn't one transfer; it's a continuous stream of **operating
-decisions** no compliance rail makes:
+Compliance says a transfer is *permitted*. It never says it is *timely*, *wise*, or *should happen now*.
 
-- This inbound is verified-clean but 3× normal from a new counterparty — classify the already-arrived
-  funds as **cleared or quarantined for review** in the merchant ledger?
-- Committed outflows exceed cleared inflows — **pause payouts**?
-- In what **order** do I receive → judge → release → pay out → reconcile?
+| The operating question | Who answers it |
+| --- | --- |
+| Is the counterparty verified and the asset clean? | **Cleanverse** (A-Pass / A-Token / CCP) |
+| This inbound is clean but 3× normal from a new party — clear it or quarantine it? | **Assay** |
+| Committed outflows exceed cleared inflows — pause payouts? | **Assay** |
+| In what order do I receive → judge → release → pay → reconcile? | **Assay** |
+| Should this compliant payout happen *right now*? | **Assay** |
 
-Compliance says a transfer is *permitted*. It never says it's *timely, wise, or should happen now*.
-That operating judgment is the gap Assay fills.
+That operating judgment — everything in the **Assay** rows — is the product.
 
-## What Assay does
+---
 
-- **Layer underneath — Cleanverse (native):** verify A-Pass and settle in clean A-Token. After a
-  confirmed outbound settlement, Assay requests the real Cleanverse transaction/Travel Rule report;
-  if Cleanverse has not indexed it yet, the UI says pending/unavailable rather than inventing proof. Assay
-  calls it; never rebuilds it. A compliance block is final and Assay never overrides it.
-- **Layer on top — Assay (the product):** a per-merchant **learned baseline** + a **multi-signal
-  reasoned decision** (amount anomaly, counterparty history, solvency) → **ALLOW / HOLD / ESCALATE**.
-  The decision is computed by a small deterministic engine (`lib/judgment/engine.ts`) — not an LLM —
-  because a money-moving decision in a compliance product has to be auditable and reproducible. A
-  real Claude API call (`lib/judgment/llm.ts`) separately narrates *why* the engine decided what it
-  decided, in plain language, for the decision log; if that call fails or is unavailable, the engine's
-  own plain-language rationale is used instead, and the decision itself is unaffected either way.
+## How it works
 
-## Why it's not a wrapper
+Assay is two layers. The bottom layer is Cleanverse, used natively and never rebuilt. The top layer is Assay's own deterministic judgment.
 
-Two payments with the **same amount** get **opposite decisions** because Assay reasons over
-counterparty and solvency, not one number — a threshold can't do that (`lib/judgment/engine.test.ts`
-asserts this directly). Strip Cleanverse out and Assay still makes real treasury judgments; strip
-Assay out and you have Cleanverse — compliant transfers you operate by hand. Neither is the other.
+```
+                         ┌─────────────────────────────────────────────┐
+                         │                  MERCHANT                    │
+                         │   receives payments   ·   pays suppliers     │
+                         └───────────────┬─────────────────────────────┘
+                                         │
+        money in (already on-chain)      │      money out (payout request)
+                   │                     │                    │
+                   ▼                     │                    ▼
+        ┌─────────────────────┐         │        ┌──────────────────────────┐
+        │  INBOUND DETECTION  │         │        │   OUTBOUND PAYOUT FORM    │
+        │  scan A-Token       │         │        │   recipient + amount      │
+        │  Transfer events    │         │        └────────────┬─────────────┘
+        │  (daily cron / sync)│         │                     │
+        └──────────┬──────────┘         │                     │
+                   │                    │                     │
+                   ▼                    ▼                     ▼
+        ╔═══════════════════════════════════════════════════════════════╗
+        ║                   ASSAY JUDGMENT ENGINE                        ║
+        ║              (deterministic · reproducible)                    ║
+        ║                                                               ║
+        ║   signals:  amount z-score  ·  counterparty history  ·        ║
+        ║             solvency / reserve coverage                       ║
+        ║                                                               ║
+        ║   verdict:  ALLOW  ·  HOLD  ·  ESCALATE                        ║
+        ║                                                               ║
+        ║   (a real Claude call narrates the verdict in plain English;  ║
+        ║    it never makes the decision — fails soft to the engine's   ║
+        ║    own rationale)                                             ║
+        ╚═══════════════════════════════╤═══════════════════════════════╝
+                                         │
+                        outbound ALLOW   │   inbound cleared / quarantined
+                                         │
+                                         ▼
+        ┌───────────────────────────────────────────────────────────────┐
+        │                   CLEANVERSE COMPLIANCE GATE                   │
+        │        verify_apass  ·  A-Token settlement  ·  CCP            │
+        │        (a compliance BLOCK is final — Assay cannot override)  │
+        └───────────────────────────────┬───────────────────────────────┘
+                                         │
+                                         ▼
+        ┌───────────────────────────────────────────────────────────────┐
+        │              SETTLE ON MONAD  ·  real erc20Transfer           │
+        │   then request the real Cleanverse Travel Rule report         │
+        │   (pending/unavailable if not yet indexed — never faked)      │
+        └───────────────────────────────────────────────────────────────┘
+```
 
-## On custody
+### The two flows, precisely
 
-Assay is not custody-free. The server generates and stores a per-merchant signing key encrypted at
-rest with AES-256-GCM, and the server can decrypt that key to sign transfers from that merchant's
-managed sandbox wallet. The key is used only by the Cleanverse-verified payout path, but compromise
-of the application and its encryption key could expose signing authority. This design is testnet-only;
-real-value production requires an external signer, embedded wallet, or scoped smart-account mandate.
+**Money in (inbound).** A customer sends A-Token (aUSDC) to the merchant's managed wallet. The funds have *already settled on-chain* — Assay cannot stop that. A daily scheduled scan (or an immediate operator sync) detects the transfer, then judges it:
+
+- **Normal** (within the learned baseline, known counterparty) → **cleared** automatically; becomes spendable working capital.
+- **Abnormal** (large z-score, first-time sender) → **quarantined** in the ledger for human review. Still visible, but *not counted as spendable*. Approving it flips the ledger state to cleared — **it never sends money anywhere** (inbound resolution is ledger-only, by design).
+
+**Money out (outbound).** The merchant enters a supplier and amount. Assay evaluates, in order:
+
+1. **Cash policy** — does cleared inflow cover this without breaching reserve policy? If not → **HOLD**.
+2. **Cleanverse eligibility** — `verify_apass` on the counterparty. If ineligible → **BLOCK** (final).
+3. If both pass → **ALLOW** → real `erc20Transfer` on Monad → request the real Cleanverse Travel Rule report → attach to the decision log.
+
+### Decision states
+
+| State | Meaning | Inbound result | Outbound result |
+| --- | --- | --- | --- |
+| **ALLOW** | Fits operating policy | Marked cleared | Proceeds to compliance, then settles |
+| **HOLD** | Would breach a reserve/operating rule | — | No transfer; queued for review |
+| **ESCALATE** | Unusual pattern (e.g. large + new party) | Quarantined for review | Queued for review with explanation |
+| **BLOCK** | Cleanverse says wallet/asset ineligible | — | Transfer does not execute; Assay can't override |
+
+---
+
+## Why it is not a Cleanverse wrapper
+
+- **Two identical amounts, opposite verdicts.** Because the engine reasons over counterparty history and solvency, not one number — a threshold cannot do this. `lib/judgment/engine.test.ts` asserts it directly.
+- **The decision is deterministic, not an LLM.** A money-moving decision in a compliance product must be auditable and reproducible, so the verdict is computed by a small pure engine (`lib/judgment/engine.ts`). A separate real Claude call (`lib/judgment/llm.ts`) *narrates* the verdict in plain language for the log; if it fails, the engine's own rationale is used and the decision is unaffected.
+- **Strip test.** Remove Cleanverse and Assay still makes real treasury judgments (less safe, still a product). Remove Assay and you have Cleanverse — compliant transfers you operate by hand.
+
+---
+
+## CVI · CVA integration points
+
+Cleanverse is load-bearing, not decorative. Every value-moving action passes through it.
+
+| Cleanverse primitive | Where Assay uses it | File |
+| --- | --- | --- |
+| **CVI — A-Pass identity** | `verify_apass` gates every outbound settlement; the counterparty must be verified or the payout is BLOCKed | `lib/cleanverse/client.ts` |
+| **CVA — A-Token settlement** | The only settlement asset; real `erc20Transfer` of the A-Token on Monad | `lib/chain/erc20.ts`, `lib/chain/monad.ts` |
+| **CCP — compliance + Travel Rule** | `query_txs` / `download_travel_rule` — after settlement Assay requests the real Cleanverse report and links it to the decision | `lib/cleanverse/client.ts`, `lib/operator/live.ts` |
+| **AES/CBC request crypto** | Cleanverse v3 request encryption implemented to spec | `lib/cleanverse/crypto.ts` |
+
+> Remove CVI and there is no verified party to gate on. Remove CVA and there is no clean asset to settle in. Remove CCP and there is no audit report. The product does not degrade without Cleanverse — it stops existing.
+
+---
 
 ## Architecture
 
-| Layer | Implementation |
-|---|---|
-| Auth | Email/password, scrypt hashing, DB-backed sessions (`lib/auth`) |
-| Multi-tenancy | One Postgres row per merchant; each carries its own managed sandbox wallet, A-Token, policy, baseline, and decision log (`lib/merchants`) |
-| Judgment engine | Deterministic multi-signal reasoning (`lib/judgment/engine.ts`), LLM-narrated rationale (`lib/judgment/llm.ts`) |
-| Compliance | Cleanverse API v3 — `verify_apass`, `query_txs`, `download_travel_rule` (`lib/cleanverse`) |
-| Settlement | viem against Monad testnet, real `erc20Transfer` (`lib/chain`) |
-| Inbound detection | Polls A-Token `Transfer` events to the merchant's wallet since the last synced block (`lib/chain/inboundLogs.ts`, `lib/operator/inboundSync.ts`) — not a simulate button |
-| Persistence | Postgres (`lib/db`); every merchant's decision log and learned baseline live in the database, not flat files, so the app works on a real serverless/production deploy |
-| Web | Next.js 16 (webpack), Tailwind |
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│  WEB  ·  Next.js 16 (webpack) · Tailwind · wagmi/viem                 │
+│  landing · auth · /app (merchant list) · /app/[id] (console)         │
+└───────────────┬──────────────────────────────────────────────────────┘
+                │  server actions
+┌───────────────▼──────────────────────────────────────────────────────┐
+│  APPLICATION LAYER                                                    │
+│                                                                       │
+│  auth/           scrypt hashing · DB-backed sessions · ownership DAL  │
+│  merchants/      per-merchant workspace, wallet, policy, baseline     │
+│  judgment/       engine.ts (deterministic)  +  llm.ts (narration)     │
+│  operator/       execute · resolve · inboundSync  (orchestration)     │
+│  cleanverse/     v3 client + AES/CBC crypto                           │
+│  chain/          viem · Monad settlement · inbound Transfer scan      │
+│  security/       AES-256-GCM encryption of creds + signing keys       │
+└───────┬───────────────────────────────────────────┬──────────────────┘
+        │                                           │
+┌───────▼─────────────┐                   ┌─────────▼────────────────────┐
+│  POSTGRES           │                   │  EXTERNAL                     │
+│  users · sessions   │                   │  Cleanverse API v3            │
+│  merchants          │                   │  Monad testnet RPC            │
+│  baselines          │                   │  Anthropic (optional, narr.)  │
+│  decisions          │                   │  Vercel Cron (daily poll)     │
+└─────────────────────┘                   └───────────────────────────────┘
+```
 
-Only Monad testnet has a real settlement client wired up today (`lib/chain/monad.ts`). Cleanverse
-itself is multi-chain, but onboarding is currently restricted to Monad — offering other chains without
-a real RPC client for them would just be a new version of the same honesty problem this rebuild was
-about fixing.
+**Multi-tenant by construction.** One Postgres row per merchant, each carrying its own managed sandbox wallet, A-Token, policy, learned baseline, and decision log — not a single hardcoded merchant. Every decision log and baseline lives in the database, not flat files, so the app runs on a real serverless/production deploy without amnesia.
 
-## Running it
+**Only Monad testnet has a real settlement client wired up today** (`lib/chain/monad.ts`). Cleanverse is multi-chain, but onboarding is deliberately restricted to Monad — offering other chains without a real RPC client for them would be a new version of the exact honesty problem this build was hardened to remove.
 
-1. **Provision Postgres.** Any Postgres 14+ works — neon.com / Supabase / Vercel Postgres all have a
-   free tier that takes a couple of minutes to set up.
-2. **Copy `.env.example` to `.env.local`** and fill in `DATABASE_URL`, Assay's server-side Cleanverse
-   credentials, optional `ANTHROPIC_API_KEY`, and generated secrets. Users never enter infrastructure secrets.
-3. **Run the migration:** `npm run db:migrate`
-4. **Start the app:** `npm run dev`
-5. **Sign up**, then create a workspace (`/app/new`). Assay selects Monad and aUSDC and creates a
-   managed sandbox wallet, showing its recovery key once.
-6. **Fund the wallet** with Monad testnet MON (for gas) and the A-Token you'll settle in, and make
-   sure it holds an A-Pass credential — Assay can't do anything until Cleanverse will.
-7. Configure a scheduler to call `GET /api/cron/poll-inbound` with `Authorization: Bearer $CRON_SECRET`.
-   The manual sync control remains available as a recovery/diagnostic action.
+---
 
-For Vercel Hobby, `vercel.json` schedules this route daily. Set `CRON_SECRET` in the Vercel project;
-Vercel includes it as the bearer token on cron invocations. Use an external free scheduler with the
-same authorization header later if more frequent polling is required.
+## Run it locally
+
+**Prerequisites:** Node 20+, a Postgres 14+ database (Neon / Supabase / Vercel Postgres free tier all work), Assay's server-side Cleanverse sandbox credentials.
+
+```bash
+# 1. Install
+npm install
+
+# 2. Configure
+cp .env.example .env.local
+#    fill in: DATABASE_URL, Cleanverse creds, generated secrets,
+#    and optionally ANTHROPIC_API_KEY (narration; app works without it)
+
+# 3. Migrate the database
+npm run db:migrate
+
+# 4. Start
+npm run dev
+```
+
+Then:
+
+1. **Sign up**, and create a workspace at `/app/new`. Assay selects Monad + aUSDC and generates a **managed sandbox wallet**, showing its recovery key once.
+2. **Activate the wallet** — this is the one step gated on Cleanverse:
+   - **A-Pass (CVI):** generate an A-Pass for the workspace wallet (`generate_apass`).
+   - **Gas:** fund with Monad testnet MON — [`faucet.monad.xyz`](https://faucet.monad.xyz/).
+   - **A-Token (aUSDC):** call `query_deposit_address` for the wallet, send Monad-testnet USDC to that deposit address via [`faucet.circle.com`](https://faucet.circle.com/); it arrives as aUSDC in the workspace wallet.
+   - The **readiness panel** turns green when identity, gas, and settlement balance are all present. Assay refuses to settle until Cleanverse will.
+3. **Run the flow** (see below).
+
+**Scheduled inbound polling:** configure a scheduler to call `GET /api/cron/poll-inbound` with `Authorization: Bearer $CRON_SECRET`. On Vercel Hobby, `vercel.json` schedules this route daily; set `CRON_SECRET` in the project and Vercel sends it as the bearer token. The manual **Sync inbound transfers** control remains available as an immediate/diagnostic action.
+
+---
+
+## Demo flow
+
+The sequence that exercises every judging axis end-to-end:
+
+```
+1. Readiness green      identity verified · MON funded · aUSDC funded
+        │
+2. Inbound NORMAL   →   send ~baseline aUSDC from a known wallet · Sync
+        │               → auto-CLEARED · becomes working capital
+        │
+3. Inbound ABNORMAL →   send a large amount from a first-time sender · Sync
+        │               → QUARANTINED (compliant per Cleanverse, held by Assay)
+        │               → approve it → flips to cleared · NO second transfer
+        │
+4. Outbound BLOCK   →   pay an ineligible recipient
+        │               → Assay refuses on-chain · the "agent stops itself" moment
+        │
+5. Outbound ALLOW   →   pay an eligible recipient within cleared inflow
+        │               → real Monad tx hash · Travel Rule report attached
+        │
+6. Export           →   Audit Pack (JSON) / CSV · full decision-to-settlement trail
+```
+
+**The signature moment is step 4** — Assay refusing to move money it shouldn't, on-chain — followed by **step 3**, where Cleanverse says *allowed* and Assay still says *not yet*. That contrast is the entire thesis.
+
+---
+
+## Custody (read this)
+
+**Assay is not custody-free.** The server generates and stores a per-merchant signing key, encrypted at rest with AES-256-GCM, and can decrypt it to sign transfers from that merchant's managed sandbox wallet. The key is used only by the Cleanverse-verified payout path, but compromise of the application *and* its encryption key could expose signing authority.
+
+**This design is testnet-only.** Real-value production requires an external signer, embedded wallet, or scoped smart-account mandate. The readiness panel and docs state this plainly; the product does not claim protection it does not have.
+
+---
 
 ## Tests
 
-`npm test` runs the pure-logic suite (judgment engine, aggregation, orchestration with mocked stores)
-unconditionally. The Postgres-backed store tests (`lib/log/store.test.ts`,
-`lib/baseline/store.test.ts`) additionally run whenever `DATABASE_URL` is set, against a real
-database — they create and tear down their own throwaway rows.
+```bash
+npm test          # pure-logic suite: judgment engine, aggregation,
+                  # orchestration with mocked stores — runs unconditionally
+```
+
+Postgres-backed store tests (`lib/log/store.test.ts`, `lib/baseline/store.test.ts`) additionally run whenever `DATABASE_URL` is set, against a real database, creating and tearing down their own throwaway rows. Current suite: all green; `tsc --noEmit` clean; `next build --webpack` succeeds.
+
+---
+
+## Project layout
+
+```
+app/
+  page.tsx                landing
+  login/  signup/         auth pages
+  app/                    merchant list
+  app/[merchantId]/       per-merchant console + settings
+  actions/                server actions (auth, merchants, payments)
+  api/
+    cron/poll-inbound/    scheduled real chain scan (bearer-authed)
+    export-log/           auth-scoped JSON/CSV export
+lib/
+  auth/                   password, sessions, DAL
+  merchants/              multi-tenant store
+  judgment/               engine.ts (deterministic) · llm.ts (narration)
+  operator/               execute · resolve · inboundSync · live
+  cleanverse/             v3 client · crypto
+  chain/                  monad · erc20 · inbound Transfer scan
+  security/               AES-256-GCM
+  db/                     schema.sql · client · migrate
+```
+
+---
 
 ## Honesty note
 
-This project was originally built in 48 hours for Cleanverse Build: Trusted Assets (Monad
-Foundation). What's described above is the current, hardened state — multi-tenant accounts, real
-Postgres persistence, real inbound-transfer detection, and an LLM call that does exactly what it's
-documented to do — not the original single-merchant hackathon build, which used flat-file storage,
-hardcoded demo scenarios, and a rationale generator that was templated text mislabeled as an LLM. The
-original planning docs (`PRD.md`, `ARCHITECTURE.md`, `BUILD_PHASES.md`, `DEMO_SCRIPT.md`) are kept for
-history but describe that earlier scope, not the app as it runs today.
+This project was originally built in 48 hours for **Cleanverse Build: Trusted Assets** (Monad Foundation). What's described here is the current, hardened state — multi-tenant accounts, real Postgres persistence, real inbound-transfer detection, and an LLM call that does exactly what it's documented to do.
+
+It is **not** the original single-merchant hackathon build, which used flat-file storage, hardcoded demo scenarios, and a rationale generator that was templated text mislabeled as an LLM. Those three things were corrected honestly rather than hidden. The original planning docs (`PRD.md`, `ARCHITECTURE.md`, `BUILD_PHASES.md`, `DEMO_SCRIPT.md`) are kept for history but describe that earlier scope, not the app as it runs today.
+
+---
+
+<div align="center">
+
+**Assay** — verified rails decide *if* money can move. Assay decides *when* it should.
+
+Built for Cleanverse Build: Trusted Assets · Monad Testnet
+
+</div>

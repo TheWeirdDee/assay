@@ -9,7 +9,6 @@ import { decryptMerchantCreds } from "./store";
 export interface MerchantReadiness {
   identity: "ready" | "action_required" | "unavailable";
   identityMessage: string;
-  verificationUrl?: string;
   gasBalance: string;
   tokenBalance: string;
   gasReady: boolean;
@@ -37,9 +36,10 @@ export async function getMerchantReadiness(merchant: MerchantRow): Promise<Merch
   const verification = verificationResult.status === "fulfilled" ? verificationResult.value.data : undefined;
 
   return {
+    // magickLink (the SumSub document-upload flow) is deliberately not surfaced here -- verification
+    // goes through generate_apass (VerifyIdentityButton) instead, no ID/passport upload.
     identity: verification?.code === 4 ? "ready" : verification ? "action_required" : "unavailable",
     identityMessage: verification?.message || "Cleanverse verification is temporarily unavailable.",
-    ...(verification?.magickLink ? { verificationUrl: verification.magickLink } : {}),
     gasBalance: Number(formatEther(gas)).toFixed(4),
     tokenBalance: Number(formatUnits(units, decimals)).toLocaleString(undefined, { maximumFractionDigits: 4 }),
     gasReady: gas > 0n,
