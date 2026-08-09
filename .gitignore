@@ -56,3 +56,5 @@ next-env.d.ts
 .cleanverse-docs/
 .scratch/
 data/
+
+.vercel

@@ -6,8 +6,8 @@ import type { DecisionLogEntry } from "./types";
 interface DecisionRow {
   id: string;
   ts: Date;
-  payment: DecisionLogEntry["payment"];
-  verdict: DecisionLogEntry["verdict"];
+  payment: DecisionLogEntry["payment"] | string;
+  verdict: DecisionLogEntry["verdict"] | string;
   outcome: DecisionLogEntry["outcome"];
   amount_units: string;
   tx_hash: string | null;
@@ -20,12 +20,17 @@ interface DecisionRow {
   source_tx_hash: string | null;
 }
 
+function decodeJsonb<T>(value: T | string): T {
+  if (typeof value !== "string") return value;
+  return JSON.parse(value) as T;
+}
+
 function toEntry(row: DecisionRow): DecisionLogEntry {
   return {
     id: row.id,
     timestamp: row.ts.toISOString(),
-    payment: row.payment,
-    verdict: row.verdict,
+    payment: decodeJsonb<DecisionLogEntry["payment"]>(row.payment),
+    verdict: decodeJsonb<DecisionLogEntry["verdict"]>(row.verdict),
     outcome: row.outcome,
     amountUnits: row.amount_units,
     ...(row.tx_hash ? { txHash: row.tx_hash } : {}),
@@ -60,7 +65,7 @@ export async function appendDecision(
       merchant_id, payment, verdict, outcome, amount_units,
       tx_hash, compliance_code, compliance_message, source_tx_hash, audit_report_url
     ) values (
-      ${merchantId}, ${JSON.stringify(entry.payment)}::jsonb, ${JSON.stringify(entry.verdict)}::jsonb, ${entry.outcome}, ${entry.amountUnits},
+      ${merchantId}, ${sql.json(JSON.parse(JSON.stringify(entry.payment)))}, ${sql.json(JSON.parse(JSON.stringify(entry.verdict)))}, ${entry.outcome}, ${entry.amountUnits},
       ${entry.txHash ?? null}, ${entry.complianceCode ?? null}, ${entry.complianceMessage ?? null},
       ${entry.sourceTxHash ?? null}, ${entry.auditReportUrl ?? null}
     )

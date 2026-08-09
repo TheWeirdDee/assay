@@ -60,6 +60,8 @@ d("decision log store", () => {
     const all = await listDecisions(merchantId);
     expect(all).toHaveLength(2);
     expect(all[0].outcome).toBe("held_by_judgment");
+    expect(all[0].payment).toEqual(expect.objectContaining({ from: "0xTRUSTED", amount: 100 }));
+    expect(all[0].verdict).toEqual(expect.objectContaining({ decision: "ALLOW", rationale: "within range" }));
   });
 
   it("dedupes inbound transfers by sourceTxHash per merchant", async () => {
