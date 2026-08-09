@@ -3,7 +3,7 @@ import type { Address } from "viem";
 import type { CleanverseCreds } from "./client";
 
 export const ASSAY_CHAIN = "monad" as const;
-export const DEFAULT_MONAD_ATOKEN = "0xfa96de5b8f434c26fdff953303dd66ff80af1026" as Address;
+export const DEFAULT_MONAD_ATOKEN = "0xaC0893567D43C3E7e6e35a72803df05416C1f20D" as Address;
 
 function required(name: string): string {
   const value = process.env[name]?.trim();
