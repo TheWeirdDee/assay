@@ -196,11 +196,23 @@ Then:
 2. **Activate the wallet** — this is the one step gated on Cleanverse:
    - **A-Pass (CVI):** generate an A-Pass for the workspace wallet (`generate_apass`).
    - **Gas:** fund with Monad testnet MON — [`faucet.monad.xyz`](https://faucet.monad.xyz/).
-   - **A-Token (aUSDC):** call `query_deposit_address` for the wallet, send Monad-testnet USDC to that deposit address via [`faucet.circle.com`](https://faucet.circle.com/); it arrives as aUSDC in the workspace wallet.
+   - **A-Token (aUSDC):** call `query_deposit_address` for the wallet. Cleanverse only mints aUSDC for deposits from an approved institutional/faucet sender; an unapproved Circle faucet sender is refunded as plain USDC rather than converted. Use the Cleanverse sandbox faucet or ask Cleanverse to whitelist the depositor.
    - The **readiness panel** turns green when identity, gas, and settlement balance are all present. Assay refuses to settle until Cleanverse will.
 3. **Run the flow** (see below).
 
 **Scheduled inbound polling:** configure a scheduler to call `GET /api/cron/poll-inbound` with `Authorization: Bearer $CRON_SECRET`. On Vercel Hobby, `vercel.json` schedules this route daily; set `CRON_SECRET` in the project and Vercel sends it as the bearer token. The manual **Sync inbound transfers** control remains available as an immediate/diagnostic action.
+
+---
+
+## On-chain evidence
+
+All addresses and hashes below are real Monad testnet records. Nothing is a simulated transaction.
+
+- **A-Pass (CVI) is active on the workspace wallet.** Cleanverse `query_apass` currently returns status `1`, tier `50`, CV record `2106`, and expiry `2027-08-09`. The wallet also holds one A-Pass NFT at the Cleanverse Monad sandbox A-Pass contract.
+  - [Workspace wallet on Monad Explorer](https://testnet.monadexplorer.com/address/0x502136A8eF821573D71760493dB65Fed7475A195)
+  - [A-Pass contract on Monad Explorer](https://testnet.monadexplorer.com/address/0xbA82D189540CaC9DC6FF46B6837CaC1BFdEC58B9)
+- **The settlement path executed on-chain during development.** Transaction [`0xb0c00242780a0efe32b0890298f91d41297fe24b835b140cbcc095c4c10806df`](https://testnet.monadexplorer.com/tx/0xb0c00242780a0efe32b0890298f91d41297fe24b835b140cbcc095c4c10806df) succeeded and emitted an ERC-20 `Transfer` of `20` units from the managed operator wallet. Its token (`0x9262C5fDA15665d02DaC9D8b6DF02903Be77375F`) was the Cleanverse-registered development A-Token; it is not presented as the current canonical sandbox aUSDC contract.
+- **The hosted demo reports the real funding boundary.** The current canonical Monad sandbox aUSDC is `0xaC0893567D43C3E7e6e35a72803df05416C1f20D`. Cleanverse rejected the public Circle faucet sender as a non-whitelisted depositor and refunded the earlier deposit instead of minting aUSDC. Assay surfaces the resulting zero balance and refuses to pretend settlement liquidity exists.
 
 ---
 
