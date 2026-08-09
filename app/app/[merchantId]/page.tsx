@@ -175,7 +175,7 @@ export default async function MerchantDashboardPage({ params, searchParams }: { 
           <StatTile label="Blocked compliance" value={summary.blockedByComplianceCount} tone="text-red-600 dark:text-red-400" />
         </section>}
 
-        {view === "overview" && <ReadinessPanel readiness={readiness} merchantId={merchantId} />}
+        {view === "overview" && <ReadinessPanel readiness={readiness} merchantId={merchantId} walletAddress={merchant.merchant_wallet_address} />}
 
         {view === "overview" && <section className="rounded-2xl border border-zinc-700 bg-zinc-900 p-5 shadow-sm sm:p-6">
           <div className="grid gap-7 lg:grid-cols-[.7fr_1.3fr]">

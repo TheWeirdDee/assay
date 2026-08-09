@@ -3,7 +3,7 @@ import { formatEther, formatUnits, type Address } from "viem";
 import type { MerchantRow } from "../auth/dal";
 import { erc20BalanceOf, erc20Decimals } from "../chain/erc20";
 import { publicClient } from "../chain/monad";
-import { queryAPass } from "../cleanverse/client";
+import { queryAPass, queryDepositAddress } from "../cleanverse/client";
 import { decryptMerchantCreds } from "./store";
 
 export interface MerchantReadiness {
@@ -13,6 +13,7 @@ export interface MerchantReadiness {
   tokenBalance: string;
   gasReady: boolean;
   tokenReady: boolean;
+  depositAddress?: string;
 }
 
 export async function getMerchantReadiness(merchant: MerchantRow): Promise<MerchantReadiness> {
@@ -20,7 +21,7 @@ export async function getMerchantReadiness(merchant: MerchantRow): Promise<Merch
   const token = merchant.atoken_address as Address;
   const credentials = decryptMerchantCreds(merchant);
 
-  const [gasResult, tokenResult, decimalsResult, identityResult] = await Promise.allSettled([
+  const [gasResult, tokenResult, decimalsResult, identityResult, depositResult] = await Promise.allSettled([
     publicClient.getBalance({ address }),
     erc20BalanceOf(token, address),
     erc20Decimals(token),
@@ -30,6 +31,11 @@ export async function getMerchantReadiness(merchant: MerchantRow): Promise<Merch
     // an unrelated token-lookup failure as an identity failure. verify_apass's per-token result
     // belongs to a specific transfer attempt and is already shown in the Compliance panel.
     queryAPass("monad", address, {
+      apiId: credentials.apiId,
+      apiKey: credentials.apiKey,
+      baseUrl: credentials.baseUrl,
+    }),
+    queryDepositAddress("monad", address, {
       apiId: credentials.apiId,
       apiKey: credentials.apiKey,
       baseUrl: credentials.baseUrl,
@@ -68,5 +74,9 @@ export async function getMerchantReadiness(merchant: MerchantRow): Promise<Merch
     tokenBalance: Number(formatUnits(units, decimals)).toLocaleString(undefined, { maximumFractionDigits: 4 }),
     gasReady: gas > 0n,
     tokenReady: units > 0n,
+    depositAddress:
+      depositResult.status === "fulfilled" && depositResult.value.code === "0000"
+        ? depositResult.value.data?.depositUSDCWallet
+        : undefined,
   };
 }
