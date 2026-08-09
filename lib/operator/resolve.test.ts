@@ -57,6 +57,33 @@ describe("approveHeldPayment", () => {
     expect(entries[0].resolution).toBe("approved");
   });
 
+  it("attaches a real report after an approved outbound settlement", async () => {
+    entries.push(heldEntry());
+    const deps = {
+      verifyCompliance: vi.fn().mockResolvedValue({ code: 4, message: "ok" }),
+      settle: vi.fn().mockResolvedValue("0xapproved"),
+      getAuditReport: vi.fn().mockResolvedValue("https://cleanverse.example/report-token"),
+    };
+    const { entry, approval } = await approveHeldPayment(MERCHANT_ID, "held-1", deps);
+    expect(approval.status).toBe("settled");
+    expect(deps.getAuditReport).toHaveBeenCalledWith("0xNEWPARTY", "0xapproved");
+    expect(entry.auditReportUrl).toBe("https://cleanverse.example/report-token");
+  });
+
+  it("keeps an approved outbound settlement when report enrichment throws", async () => {
+    entries.push(heldEntry());
+    const deps = {
+      verifyCompliance: vi.fn().mockResolvedValue({ code: 4, message: "ok" }),
+      settle: vi.fn().mockResolvedValue("0xapproved"),
+      getAuditReport: vi.fn().mockRejectedValue(new Error("not indexed")),
+    };
+    const { entry, approval } = await approveHeldPayment(MERCHANT_ID, "held-1", deps);
+    expect(approval.status).toBe("settled");
+    expect(entry.resolution).toBe("approved");
+    expect(entry.resolvedTxHash).toBe("0xapproved");
+    expect(entry.auditReportUrl).toBeUndefined();
+  });
+
   it("clears a held inbound without sending funds back to its sender", async () => {
     entries.push(heldEntry({ payment: { from: "0xCUSTOMER", amount: 500, direction: "in", fundsRef: "0xinbound" } }));
     const deps = { verifyCompliance: vi.fn(), settle: vi.fn() };

@@ -85,9 +85,9 @@ The failure PATH is a demo beat, not a hidden branch: the money shot IS a hold/r
 ## 5. The real completed result (no-mock rule — what the demo SHOWS)
 
 Every ALLOW ends in a REAL on-chain A-Token settlement on Monad testnet — show the tx + the settled
-state, not just a UI toast. Every HOLD shows funds provably NOT moved (still in escrow / not sent) +
-the escalation. "If you claim it settled, show the settled result; if you claim it held, show nothing
-moved." No mock on the core path.
+state, not just a UI toast. An outbound HOLD shows funds were not sent. An inbound HOLD is only a
+ledger quarantine applied after funds already arrived on-chain; it is never described as escrow or a
+blocked transfer. No mock on the core path.
 
 ## 6. Merchant console (UX — 15 pts, product-grade, Paayee rule)
 

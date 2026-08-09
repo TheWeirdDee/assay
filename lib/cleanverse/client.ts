@@ -15,7 +15,7 @@
  *  - A-Token transfer itself is a normal on-chain call (viem `writeContract`), not a Cleanverse REST
  *    endpoint -- see lib/chain/ (Phase 2) once that's built.
  */
-import { encryptCleanverseBody, decryptCleanverseBody } from "./crypto";
+import { encryptCleanverseBody, decryptCleanverseBody } from "./crypto.ts";
 
 export interface CleanverseCreds {
   apiId: string;
@@ -168,6 +168,24 @@ export async function queryAPass(
   creds: CleanverseCreds,
 ): Promise<CleanverseEnvelope<QueryAPassResult>> {
   return callPlain("/query_apass", { chain, address }, creds);
+}
+
+export interface QueryDepositAddressResult {
+  address: string;
+  chain: string;
+  txHash?: string;
+  depositUSDCWallet?: string;
+  depositUSDTWallet?: string;
+  apassAddress?: string;
+}
+
+/** Return the Cleanverse deposit rails assigned to an A-Pass wallet. */
+export async function queryDepositAddress(
+  chain: Chain,
+  address: string,
+  creds: CleanverseCreds,
+): Promise<CleanverseEnvelope<QueryDepositAddressResult>> {
+  return callPlain("/query_deposit_address", { chain, address }, creds);
 }
 
 export type VerifyAPassCode = 1 | 2 | 3 | 4; // 1 token not found, 2 no A-Pass, 3 blocked, 4 allowed

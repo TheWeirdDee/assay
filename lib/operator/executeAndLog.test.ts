@@ -50,6 +50,25 @@ describe("executeAndLog", () => {
     expect(appendDecisionMock).toHaveBeenCalledWith(MERCHANT_ID, expect.objectContaining({ outcome: "settled", txHash: "0xsettled" }));
   });
 
+  it("keeps and logs a confirmed settlement when report enrichment throws", async () => {
+    const deps = {
+      verifyCompliance: vi.fn().mockResolvedValue({ code: 4, message: "ok" }),
+      settle: vi.fn().mockResolvedValue("0xsettled"),
+      getAuditReport: vi.fn().mockRejectedValue(new Error("not indexed")),
+    };
+    const { outcome, entry } = await executeAndLog(
+      MERCHANT_ID,
+      { from: "0xTRUSTED", amount: 1100, direction: "out", fundsRef: "report-fail" },
+      baseline,
+      policy,
+      1100n,
+      deps,
+    );
+    expect(outcome.status).toBe("settled");
+    expect(entry?.txHash).toBe("0xsettled");
+    expect(entry?.auditReportUrl).toBeUndefined();
+  });
+
   it("writes a held entry with no txHash and no compliance call when judgment holds", async () => {
     const deps = {
       verifyCompliance: vi.fn().mockResolvedValue({ code: 4, message: "ok" }),

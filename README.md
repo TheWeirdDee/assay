@@ -1,6 +1,6 @@
 # Assay
 
-**An autonomous treasury operator for on-chain merchants.** Assay makes the decisions a compliance
+**A scheduled treasury operator for on-chain merchants.** Assay makes the decisions a compliance
 rail never makes — *when* to pay, whether to *hold*, how to *sequence*, when to *escalate* — and
 executes them only through Cleanverse's verified rails, so every move it decides is also provably
 clean. **Cleanverse answers "is this transfer allowed?"; Assay answers "should this money move, now?"**
@@ -12,17 +12,19 @@ Deployed on **Monad testnet**, built against **Cleanverse API v3**.
 A multi-tenant web app. Anyone can create an account, create a merchant workspace on Assay's
 Cleanverse sandbox integration, and run a real treasury operator against live Cleanverse
 compliance checks and real on-chain settlement on Monad. It is not a fixed single-merchant demo and
-there is no simulate-a-payment button — inbound payments are detected from real on-chain transfers,
+there is no simulate-a-payment button — inbound payments are detected from real on-chain transfers
+by a daily scheduled scan on the hosted free tier or an operator-triggered immediate sync,
 outbound payments are real merchant-submitted payouts, and the judgment engine's decision on each one
 is deterministic and logged.
 
 ## The gap Assay fills
 
-Cleanverse already makes a transfer compliant — clean money, verified parties, sanctions/Travel-Rule,
-audit reports. But a business's money isn't one transfer; it's a continuous stream of **operating
+Cleanverse already makes a transfer compliant — clean money, verified parties, and transaction
+reporting. But a business's money isn't one transfer; it's a continuous stream of **operating
 decisions** no compliance rail makes:
 
-- This inbound is verified-clean but 3× normal from a new counterparty — accept, or **hold for review**?
+- This inbound is verified-clean but 3× normal from a new counterparty — classify the already-arrived
+  funds as **cleared or quarantined for review** in the merchant ledger?
 - Committed outflows exceed cleared inflows — **pause payouts**?
 - In what **order** do I receive → judge → release → pay out → reconcile?
 
@@ -31,7 +33,9 @@ That operating judgment is the gap Assay fills.
 
 ## What Assay does
 
-- **Layer underneath — Cleanverse (native):** verify A-Pass, settle in clean A-Token, CCP audit. Assay
+- **Layer underneath — Cleanverse (native):** verify A-Pass and settle in clean A-Token. After a
+  confirmed outbound settlement, Assay requests the real Cleanverse transaction/Travel Rule report;
+  if Cleanverse has not indexed it yet, the UI says pending/unavailable rather than inventing proof. Assay
   calls it; never rebuilds it. A compliance block is final and Assay never overrides it.
 - **Layer on top — Assay (the product):** a per-merchant **learned baseline** + a **multi-signal
   reasoned decision** (amount anomaly, counterparty history, solvency) → **ALLOW / HOLD / ESCALATE**.
@@ -50,11 +54,11 @@ Assay out and you have Cleanverse — compliant transfers you operate by hand. N
 
 ## On custody
 
-Assay is not a custodian in the exchange sense — it never takes ownership of merchant funds or trades
-on their behalf. It is not custody-free either: each merchant hands Assay a signing key (generated for
-them, or their own — their choice at onboarding), encrypted at rest with AES-256-GCM, usable only to
-submit transfers through Cleanverse's verified rails for that merchant. That scoped mandate is what
-makes autonomous settlement possible, and it's disclosed here rather than described as its opposite.
+Assay is not custody-free. The server generates and stores a per-merchant signing key encrypted at
+rest with AES-256-GCM, and the server can decrypt that key to sign transfers from that merchant's
+managed sandbox wallet. The key is used only by the Cleanverse-verified payout path, but compromise
+of the application and its encryption key could expose signing authority. This design is testnet-only;
+real-value production requires an external signer, embedded wallet, or scoped smart-account mandate.
 
 ## Architecture
 

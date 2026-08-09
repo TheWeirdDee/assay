@@ -28,9 +28,16 @@ export async function executeAndLog(
     policy,
   });
   const verdict: Verdict = llmSummary ? { ...outcome.verdict, llmSummary } : outcome.verdict;
-  const auditReportUrl = outcome.status === "settled"
-    ? await deps.getAuditReport?.(payment.from, outcome.txHash)
-    : undefined;
+  let auditReportUrl: string | undefined;
+  if (outcome.status === "settled" && deps.getAuditReport) {
+    try {
+      auditReportUrl = await deps.getAuditReport(payment.from, outcome.txHash);
+    } catch {
+      // Settlement is already confirmed. Reporting is a post-settlement enrichment: a missing or
+      // not-yet-indexed Cleanverse artifact must never undo or hide the real on-chain result.
+      auditReportUrl = undefined;
+    }
+  }
 
   const entry = await appendDecision(merchantId, {
     payment,

@@ -56,13 +56,26 @@ export async function approveHeldPayment(
   }
 
   const txHash = await deps.settle(entry.payment.from, BigInt(entry.amountUnits));
-  const updated = await updateDecision(merchantId, entryId, {
+  let updated = await updateDecision(merchantId, entryId, {
     resolution: "approved",
     resolvedAt: new Date().toISOString(),
     resolvedTxHash: txHash,
     complianceCode: compliance.code,
     complianceMessage: compliance.message,
   });
+
+  // The transfer above is final before report enrichment begins. Cleanverse indexing can lag, so
+  // report failure is deliberately fail-soft and persists no invented artifact reference.
+  if (deps.getAuditReport) {
+    try {
+      const auditReportUrl = await deps.getAuditReport(entry.payment.from, txHash);
+      if (auditReportUrl) {
+        updated = await updateDecision(merchantId, entryId, { auditReportUrl });
+      }
+    } catch {
+      // Keep the confirmed settlement and its log; the UI reports the artifact as unavailable.
+    }
+  }
   await learnCounterparty(merchantId, entry.payment.from);
 
   return {
@@ -71,14 +84,20 @@ export async function approveHeldPayment(
   };
 }
 
-/** Merchant rejects a held/escalated payment. No funds ever moved, and none will. */
+/**
+ * Merchant rejects a held/escalated entry as a ledger-only resolution. For inbound entries the
+ * funds already arrived and remain quarantined; rejection never initiates a refund or chain write.
+ * For outbound entries, no transfer is initiated.
+ */
 export async function rejectHeldPayment(merchantId: string, entryId: string): Promise<DecisionLogEntry> {
   const entries = await listDecisions(merchantId);
-  findPendingEntry(entries, entryId);
+  const entry = findPendingEntry(entries, entryId);
   const updated = await updateDecision(merchantId, entryId, {
     resolution: "rejected",
     resolvedAt: new Date().toISOString(),
   });
   if (!updated) throw new Error(`Failed to update entry ${entryId}`);
+  // Reading direction here makes the ledger-only inbound rule explicit and durable in this branch.
+  if (entry.payment.direction === "in") return updated;
   return updated;
 }

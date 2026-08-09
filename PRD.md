@@ -123,7 +123,8 @@ Load-bearing; remove either and Assay collapses into unsafe autonomous payments.
 - **A-Token (CVA):** sole settlement asset; inbound validated as clean-origination before release;
   outbound paid in A-Token.
 - **CCP:** pre-transaction checks (identity, provenance, Travel Rule, sanctions) + audit report.
-- **Clean Payment Rails:** escrow hold/release delivering the merchant-acceptance guarantee.
+- **Inbound limitation:** incoming transfers already arrived on-chain; Assay can quarantine them in
+  its ledger but does not provide escrow, automatic release, or automatic refund.
 - **Agent Skill Framework:** the mandate/principal/counterparty/spend-control/audit scaffold that
   makes the autonomous loop safe.
 
