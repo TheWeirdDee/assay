@@ -22,20 +22,21 @@ Two payments of the *same amount* can get opposite decisions, because Assay reas
 
 ## On-chain evidence
 
-Independent RPC verification (`getTransactionReceipt`, `status: success` on Monad testnet)
-confirms five successful ERC-20 transfers against the Cleanverse-registered development
-A-Token (`0x9262C5fDA15665d02DaC9D8b6DF02903Be77375F`): 250, 50, 30, 45, and 20 tokens.
-The strongest logged Assay demo flows are the 30-token ALLOW, the 45-token ALLOW
-(compliance code 4, apass verify success), and a 500-unit ESCALATE scenario that was
-approved and executed as a deliberately limited 20-token on-chain settlement.
+Independent Monad testnet RPC verification (`getTransactionReceipt`, `status: success`)
+confirms five successful ERC-20 transfers of the Cleanverse-registered development
+A-Token `ASSAYUSD` (`0x9262C5fDA15665d02DaC9D8b6DF02903Be77375F`, 6 decimals):
+250, 50, 30, 45, and 20 token units. These are test-token counts. The chain does not
+denominate them in fiat, and no dollar amount is claimed. The 500-unit value was an
+ESCALATE scenario label; that flow's actual on-chain transfer was exactly 20 ASSAYUSD
+to the dead address (`0x000000000000000000000000000000000000dEaD`).
 
-| Amount | Flow | Tx hash |
+| ASSAYUSD units | Flow | Tx hash |
 | --- | --- | --- |
 | 250 | direct dev settlement | 0xd140790ed7021b7935d008ebb560e62e88cb76338d811ff1d66f3a9a4821de9d |
 | 50 | ALLOW via executeOutboundPayment | 0xc55bd0a9d1226539e18e25b98ea0d43d311aef344c0fad2a17e305b4636addff |
 | 30 | ALLOW → settled | 0x8c922c454d2d70bb024aac0243e06e26345c10424bc38f0c5597f5187053a583 |
 | 45 | ALLOW → settled (apass verify success) | 0x0880981a0348e110794b1aba7230ff5b10bd23c6bfbfaaa85d81c44944f9b9c8 |
-| 20 | ESCALATE(500 scenario) → approved → settled | 0xb0c00242780a0efe32b0890298f91d41297fe24b835b140cbcc095c4c10806df |
+| 20 | ESCALATE (500-unit scenario) → approved → transferred to dead address | 0xb0c00242780a0efe32b0890298f91d41297fe24b835b140cbcc095c4c10806df |
 
 Explorer base: `https://testnet.monadexplorer.com/tx/<hash>`.
 
