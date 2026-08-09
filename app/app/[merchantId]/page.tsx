@@ -379,11 +379,11 @@ export default async function MerchantDashboardPage({ params, searchParams }: { 
 }
 
 function WorkspaceNavLink({ href, icon, label, active, count }: { href: string; icon: React.ReactNode; label: string; active?: boolean; count?: number }) {
-  return <Link href={href} className={`flex items-center gap-3 rounded-xl px-3 py-3 font-semibold transition-colors ${active ? "bg-zinc-800 text-white" : "text-zinc-400 hover:bg-zinc-900 hover:text-white"}`}><span className="[&>svg]:h-4 [&>svg]:w-4">{icon}</span><span>{label}</span>{count !== undefined && count > 0 ? <span className="ml-auto rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-black text-zinc-950">{count}</span> : null}</Link>;
+  return <a href={href} className={`flex items-center gap-3 rounded-xl px-3 py-3 font-semibold transition-colors ${active ? "bg-zinc-800 text-white" : "text-zinc-400 hover:bg-zinc-900 hover:text-white"}`}><span className="[&>svg]:h-4 [&>svg]:w-4">{icon}</span><span>{label}</span>{count !== undefined && count > 0 ? <span className="ml-auto rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-black text-zinc-950">{count}</span> : null}</a>;
 }
 
 function MobileNavLink({ href, label, active }: { href: string; label: string; active: boolean }) {
-  return <Link href={href} className={`shrink-0 rounded-lg px-3 py-2 text-xs font-bold ${active ? "bg-[#a8d14a] text-zinc-950" : "bg-zinc-900 text-zinc-300"}`}>{label}</Link>;
+  return <a href={href} className={`shrink-0 rounded-lg px-3 py-2 text-xs font-bold ${active ? "bg-[#a8d14a] text-zinc-950" : "bg-zinc-900 text-zinc-300"}`}>{label}</a>;
 }
 
 function GuideStep({ done, number, title, body }: { done: boolean; number: string; title: string; body: string }) {
