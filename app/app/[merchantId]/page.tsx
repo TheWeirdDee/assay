@@ -71,8 +71,12 @@ function StatTile({ label, value, tone }: { label: string; value: string | numbe
   );
 }
 
-export default async function MerchantDashboardPage({ params }: { params: Promise<{ merchantId: string }> }) {
+type WorkspaceView = "overview" | "payments" | "inbox" | "operations" | "compliance";
+
+export default async function MerchantDashboardPage({ params, searchParams }: { params: Promise<{ merchantId: string }>; searchParams: Promise<{ view?: string }> }) {
   const { merchantId } = await params;
+  const requestedView = (await searchParams).view;
+  const view: WorkspaceView = requestedView === "payments" || requestedView === "inbox" || requestedView === "operations" || requestedView === "compliance" ? requestedView : "overview";
   const { merchant } = await requireMerchant(merchantId);
 
   const [entries, baseline, readiness] = await Promise.all([
@@ -101,11 +105,11 @@ export default async function MerchantDashboardPage({ params }: { params: Promis
           <div><p className="text-lg font-black text-white">Assay</p><p className="text-xs text-zinc-500">Treasury control</p></div>
         </div>
         <nav aria-label="Workspace" className="flex flex-1 flex-col gap-1 p-4 text-sm">
-          <WorkspaceNavLink href="#overview" icon={<LayoutDashboard />} label="Overview" active />
-          <WorkspaceNavLink href="#payments" icon={<Send />} label="Payments" />
-          <WorkspaceNavLink href="#decision-inbox" icon={<Inbox />} label="Decision inbox" count={inbox.length} />
-          <WorkspaceNavLink href="#operations" icon={<Activity />} label="Decision log" />
-          <WorkspaceNavLink href="#compliance" icon={<FileText />} label="Compliance reports" />
+          <WorkspaceNavLink href={`/app/${merchantId}?view=overview`} icon={<LayoutDashboard />} label="Overview" active={view === "overview"} />
+          <WorkspaceNavLink href={`/app/${merchantId}?view=payments`} icon={<Send />} label="Payments" active={view === "payments"} />
+          <WorkspaceNavLink href={`/app/${merchantId}?view=inbox`} icon={<Inbox />} label="Decision inbox" count={inbox.length} active={view === "inbox"} />
+          <WorkspaceNavLink href={`/app/${merchantId}?view=operations`} icon={<Activity />} label="Decision log" active={view === "operations"} />
+          <WorkspaceNavLink href={`/app/${merchantId}?view=compliance`} icon={<FileText />} label="Compliance reports" active={view === "compliance"} />
           <WorkspaceNavLink href={`/app/${merchantId}/settings`} icon={<SlidersHorizontal />} label="Policy settings" />
         </nav>
         <div className="m-4 rounded-2xl border border-emerald-900/60 bg-emerald-950/25 p-4">
@@ -117,24 +121,32 @@ export default async function MerchantDashboardPage({ params }: { params: Promis
       </aside>
 
       <main className="min-w-0">
-        <div className="sticky top-0 z-20 flex min-h-16 items-center justify-between border-b border-zinc-200 bg-white/90 px-5 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90 sm:px-8">
+        <div className="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-3 border-b border-zinc-200 bg-white/90 px-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90 sm:px-8">
           <div className="flex items-center gap-3">
             <Image src="/assay-icon.svg" alt="Assay" width={30} height={30} className="rounded-lg lg:hidden" />
             <div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-zinc-500">Workspace</p><p className="text-sm font-bold">{merchant.name}</p></div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <Link href={`/app/${merchantId}/settings`} className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-zinc-300 px-3 text-xs font-semibold text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"><Settings className="h-3.5 w-3.5" />Policy</Link>
             <ExportButton merchantId={merchantId} />
           </div>
         </div>
+
+        <nav aria-label="Mobile workspace" className="flex gap-2 overflow-x-auto border-b border-zinc-800 bg-zinc-950 px-4 py-3 lg:hidden">
+          <MobileNavLink href={`/app/${merchantId}?view=overview`} label="Overview" active={view === "overview"} />
+          <MobileNavLink href={`/app/${merchantId}?view=payments`} label="Payments" active={view === "payments"} />
+          <MobileNavLink href={`/app/${merchantId}?view=inbox`} label="Inbox" active={view === "inbox"} />
+          <MobileNavLink href={`/app/${merchantId}?view=operations`} label="Log" active={view === "operations"} />
+          <MobileNavLink href={`/app/${merchantId}?view=compliance`} label="Reports" active={view === "compliance"} />
+        </nav>
 
         <div id="overview" className="mx-auto flex w-full max-w-[1500px] flex-col gap-7 px-5 py-8 sm:px-8 lg:px-10">
         <header className="flex flex-col gap-5 border-b border-zinc-200/80 pb-7 dark:border-zinc-800/80">
           <div className="flex items-start justify-between gap-6">
             <div>
               <p className="text-xs font-bold uppercase tracking-[.2em] text-zinc-500">Treasury operations</p>
-              <h1 className="mt-2 text-3xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl">Good to see you, {merchant.name}.</h1>
-              <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">Here is what needs attention across this workspace.</p>
+              <h1 className="mt-2 text-3xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl">{view === "overview" ? `Good to see you, ${merchant.name}.` : view === "payments" ? "Payments" : view === "inbox" ? "Decision inbox" : view === "operations" ? "Operational decision log" : "Compliance reports"}</h1>
+              <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">{view === "overview" ? "Here is what needs attention across this workspace." : view === "payments" ? "Send a verified payout or reconcile incoming A-Token transfers." : view === "inbox" ? "Review only the transactions that need a merchant decision." : view === "operations" ? "Trace every treasury judgment and its resulting outcome." : "Review Cleanverse eligibility results and settlement evidence."}</p>
             </div>
             <div className={`hidden min-w-52 rounded-xl border p-4 sm:block ${readiness.identity === "ready" ? "border-emerald-800/60 bg-emerald-950/20" : "border-amber-800/60 bg-amber-950/20"}`}>
               <p className="flex items-center gap-2 text-sm font-bold"><ShieldCheck className="h-4 w-4" />{readiness.identity === "ready" ? "Identity verified" : "Identity not verified"}</p>
@@ -156,16 +168,16 @@ export default async function MerchantDashboardPage({ params }: { params: Promis
           </div>
         </header>
 
-        <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+        {view === "overview" && <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatTile label="Settled payments" value={summary.settledCount} tone="text-emerald-600 dark:text-emerald-400" />
           <StatTile label="Held operational" value={summary.heldCount} tone="text-amber-600 dark:text-amber-400" />
           <StatTile label="Escalated inbox" value={summary.escalatedCount} tone="text-amber-600 dark:text-amber-400" />
           <StatTile label="Blocked compliance" value={summary.blockedByComplianceCount} tone="text-red-600 dark:text-red-400" />
-        </section>
+        </section>}
 
-        <ReadinessPanel readiness={readiness} />
+        {view === "overview" && <ReadinessPanel readiness={readiness} />}
 
-        <section className="rounded-2xl border border-zinc-700 bg-zinc-900 p-6 shadow-sm">
+        {view === "overview" && <section className="rounded-2xl border border-zinc-700 bg-zinc-900 p-5 shadow-sm sm:p-6">
           <div className="grid gap-7 lg:grid-cols-[.7fr_1.3fr]">
             <div><p className="text-sm font-extrabold uppercase tracking-[.16em] text-[#a8d14a]">Start here</p><h2 className="mt-3 text-2xl font-black text-white">{readiness.identity !== "ready" ? "Finish activating this workspace" : !readiness.gasReady || !readiness.tokenReady ? "Fund the sandbox wallet" : "Your treasury operator is ready"}</h2><p className="mt-3 text-base leading-7 text-zinc-300">{readiness.identity !== "ready" ? "Assay cannot evaluate or settle verified money until this wallet receives its Cleanverse identity." : !readiness.gasReady || !readiness.tokenReady ? "The identity is ready. Add testnet gas and settlement tokens before attempting a payout." : "Send a small incoming transfer or create a payout. Assay will judge it and show any exception in the review queue."}</p></div>
             <ol className="grid gap-3 sm:grid-cols-3">
@@ -174,9 +186,9 @@ export default async function MerchantDashboardPage({ params }: { params: Promis
               <GuideStep done={entries.length > 0} number="3" title="Run first payment" body="Receive or send a small test transfer." />
             </ol>
           </div>
-        </section>
+        </section>}
 
-        <section id="payments" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {view === "payments" && <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
           <PayoutForm merchantId={merchantId} />
           <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white/80 p-5 dark:border-zinc-800 dark:bg-zinc-900/80 shadow-sm">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-300">
@@ -189,14 +201,14 @@ export default async function MerchantDashboardPage({ params }: { params: Promis
             </p>
             <SyncInboundButton merchantId={merchantId} />
           </div>
-        </section>
+        </section>}
 
-        <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {view === "overview" && <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
           <SolvencyGauge clearedInflows={baseline.clearedInflows} committedOutflows={baseline.committedOutflows} />
           <LearnedBaselinePanel baseline={serializedBaseline} />
-        </section>
+        </section>}
 
-        <section id="decision-inbox" className="flex scroll-mt-24 flex-col gap-3 rounded-2xl border border-zinc-200 bg-white/50 p-5 dark:border-zinc-800 dark:bg-zinc-900/30">
+        {view === "inbox" && <section className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white/50 p-4 dark:border-zinc-800 dark:bg-zinc-900/30 sm:p-5">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
               Decision Inbox
@@ -259,9 +271,9 @@ export default async function MerchantDashboardPage({ params }: { params: Promis
               ))}
             </ul>
           )}
-        </section>
+        </section>}
 
-        <section id="operations" className="flex scroll-mt-24 flex-col gap-3">
+        {view === "operations" && <section className="flex flex-col gap-3">
           <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
             Operational Decision Log
           </h2>
@@ -310,9 +322,9 @@ export default async function MerchantDashboardPage({ params }: { params: Promis
               </table>
             </div>
           )}
-        </section>
+        </section>}
 
-        <section id="compliance" className="flex scroll-mt-24 flex-col gap-3">
+        {view === "compliance" && <section className="flex flex-col gap-3">
           <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
             <ShieldCheck className="h-4 w-4 text-zinc-400" />
             Cleanverse Compliance Panel (A-Pass / CCP)
@@ -359,7 +371,7 @@ export default async function MerchantDashboardPage({ params }: { params: Promis
               </table>
             </div>
           )}
-        </section>
+        </section>}
         </div>
       </main>
     </div>
@@ -368,6 +380,10 @@ export default async function MerchantDashboardPage({ params }: { params: Promis
 
 function WorkspaceNavLink({ href, icon, label, active, count }: { href: string; icon: React.ReactNode; label: string; active?: boolean; count?: number }) {
   return <Link href={href} className={`flex items-center gap-3 rounded-xl px-3 py-3 font-semibold transition-colors ${active ? "bg-zinc-800 text-white" : "text-zinc-400 hover:bg-zinc-900 hover:text-white"}`}><span className="[&>svg]:h-4 [&>svg]:w-4">{icon}</span><span>{label}</span>{count !== undefined && count > 0 ? <span className="ml-auto rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-black text-zinc-950">{count}</span> : null}</Link>;
+}
+
+function MobileNavLink({ href, label, active }: { href: string; label: string; active: boolean }) {
+  return <Link href={href} className={`shrink-0 rounded-lg px-3 py-2 text-xs font-bold ${active ? "bg-[#a8d14a] text-zinc-950" : "bg-zinc-900 text-zinc-300"}`}>{label}</Link>;
 }
 
 function GuideStep({ done, number, title, body }: { done: boolean; number: string; title: string; body: string }) {
